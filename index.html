@@ -1,0 +1,2298 @@
+
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+ <title>유관부서 요청 접수 시스템</title>
+ <style>
+    :root {
+      --bg: #f4f6f8;
+      --bg-accent: #eef3ff;
+      --surface: #ffffff;
+      --surface-soft: #f8fafc;
+      --text: #1f2937;
+      --text-muted: #6b7280;
+      --line: #d7dee7;
+      --line-strong: #b8c3d1;
+      --primary: #1f4e79;
+      --primary-strong: #163a5a;
+      --primary-soft: #eaf2fb;
+      --success: #1f7a4f;
+      --success-soft: #eaf7f0;
+      --warning: #9a6700;
+      --warning-soft: #fef9ec;
+      --danger: #b42318;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --radius-sm: 10px;
+      --shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+      --shadow-soft: 0 8px 20px rgba(15, 23, 42, 0.05);
+    }
+
+    * { box-sizing: border-box; }
+ 
+    html, body {
+      margin: 0; padding: 0;
+      font-family: "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      background: radial-gradient(circle at top right, rgba(31,78,121,0.08), transparent 28%),
+        linear-gradient(180deg, #f7f9fc 0%, #eef2f7 100%);
+      color: var(--text);
+    }
+
+    body { min-height: 100vh; padding: 24px 12px 60px; }
+
+    .shell {
+      max-width: 1600px; margin: 0 auto;
+      display: grid; grid-template-columns: 280px minmax(0,1fr);
+      gap: 24px; align-items: start;
+    }
+
+    .panel, .main-card {
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(215,222,231,0.9);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel { padding: 24px; position: sticky; top: 24px; }
+
+    .brand { display: flex; gap: 14px; align-items: center; margin-bottom: 22px; }
+    .brand-mark {
+      width: 52px; height: 52px; border-radius: 16px;
+      background: linear-gradient(135deg, var(--primary) 0%, #3b6e9e 100%);
+      color: white; display: grid; place-items: center; font-size: 24px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
+    }
+    .brand h1 { margin: 0 0 4px; font-size: 20px; letter-spacing: -0.3px; }
+    .brand p, .muted { margin: 0; color: var(--text-muted); font-size: 13px; line-height: 1.5; }
+
+    .tab-nav {
+      display: flex; gap: 6px; margin: 20px 0 16px;
+      background: var(--surface-soft); border-radius: 16px;
+      padding: 5px; border: 1px solid var(--line);
+    }
+    .tab-btn {
+      flex: 1; padding: 12px 8px; border: none; border-radius: 12px;
+      background: transparent; font-size: 13px; font-weight: 700;
+      color: var(--text-muted); cursor: pointer; transition: 0.2s ease;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .tab-btn.active {
+      background: var(--primary); color: white;
+      box-shadow: 0 4px 12px rgba(31,78,121,0.2);
+    }
+    .tab-btn:hover:not(.active) { background: rgba(31,78,121,0.06); }
+
+    .sidebar-context { display: none; }
+    .sidebar-context.active { display: block; }
+
+    .step-list { display: grid; gap: 12px; margin: 18px 0 24px; }
+    .step-item {
+      display: grid; grid-template-columns: 38px 1fr; gap: 12px;
+      padding: 14px; border-radius: 16px; background: var(--surface-soft);
+      border: 1px solid var(--line); transition: 0.2s ease;
+    }
+    .step-item.active { border-color: rgba(31,78,121,0.28); background: var(--primary-soft); }
+    .step-item.done { border-color: rgba(31,122,79,0.28); background: var(--success-soft); }
+    .step-no {
+      width: 38px; height: 38px; border-radius: 50%; background: white;
+      border: 1px solid var(--line-strong); display: grid; place-items: center;
+      font-size: 13px; font-weight: 700; color: var(--primary);
+    }
+    .step-item.done .step-no { color: var(--success); border-color: rgba(31,122,79,0.35); }
+    .step-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+
+    .helper-box {
+      padding: 16px; border-radius: 18px;
+      background: linear-gradient(180deg, #f8fbff 0%, #f2f7fc 100%);
+      border: 1px solid #dbe7f4;
+    }
+    .helper-box strong { display: block; margin-bottom: 8px; font-size: 14px; }
+    .helper-box ul { margin: 0; padding-left: 18px; color: var(--text-muted); font-size: 13px; line-height: 1.65; }
+
+    .main-card { overflow: hidden; }
+
+    .hero {
+      padding: 30px 32px 22px;
+      background: linear-gradient(135deg, rgba(31,78,121,0.95), rgba(46,101,148,0.88));
+      color: white;
+    }
+    .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+    .hero h2 { margin: 0 0 8px; font-size: 28px; letter-spacing: -0.6px; }
+    .hero p { margin: 0; color: rgba(255,255,255,0.84); line-height: 1.6; font-size: 14px; }
+    .hero-chip-group { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .hero-chip {
+      padding: 8px 12px; border-radius: 999px;
+      background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.18);
+      font-size: 12px; font-weight: 600; white-space: nowrap;
+    }
+
+    .content {
+      padding: 28px 32px 32px;
+      background: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(250,251,253,1) 100%);
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .section {
+      margin-bottom: 18px; border: 1px solid var(--line);
+      border-radius: 20px; background: var(--surface);
+      box-shadow: var(--shadow-soft); overflow: hidden;
+    }
+    .section-header {
+      padding: 18px 22px;
+      background: linear-gradient(180deg, #fbfcfe 0%, #f5f8fb 100%);
+      border-bottom: 1px solid var(--line);
+      display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .section-title { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: -0.2px; }
+    .section-desc { font-size: 12px; color: var(--text-muted); }
+    .section-body { padding: 22px; }
+
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px 16px; }
+    .full { grid-column: 1 / -1; }
+
+    .field { display: flex; flex-direction: column; gap: 8px; }
+    .field label {
+      font-size: 13px; font-weight: 700; color: #425466;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .required { color: var(--danger); font-size: 12px; }
+    .badge {
+      font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 999px;
+      background: var(--primary-soft); color: var(--primary); border: 1px solid #cadcf1;
+    }
+    .badge-success { background: var(--success-soft); color: var(--success); border-color: #b8e0c8; }
+    .badge-warning { background: var(--warning-soft); color: var(--warning); border-color: #e8d5a0; }
+    .hint { font-size: 12px; color: var(--text-muted); margin-top: -2px; }
+
+    input, select, textarea {
+      width: 100%; border: 1px solid var(--line-strong); background: #fff;
+      border-radius: 12px; padding: 13px 14px; font-size: 14px;
+      color: var(--text); outline: none; transition: 0.16s ease;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(31,78,121,0.10);
+    }
+    input[readonly] { background: #f8fafc; color: #526071; }
+    textarea { min-height: 140px; resize: vertical; line-height: 1.6; }
+
+    .input-row { display: flex; gap: 10px; }
+    .input-row > * { flex: 1; }
+
+    .autocomplete-wrap { position: relative; }
+    .autocomplete-list {
+      position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+      display: none; background: white; border: 1px solid #c9d5e2;
+      border-radius: 14px; box-shadow: 0 18px 30px rgba(15,23,42,0.12);
+      z-index: 40; overflow: hidden; max-height: 220px; overflow-y: auto;
+    }
+    .autocomplete-list.show { display: block; }
+    .autocomplete-item {
+      padding: 12px 14px; border-bottom: 1px solid #eef2f7;
+      cursor: pointer; background: white;
+    }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover, .autocomplete-item.active { background: #f4f8fc; }
+    .autocomplete-item .name { font-weight: 700; display: block; margin-bottom: 4px; }
+    .autocomplete-item .meta { font-size: 12px; color: var(--text-muted); }
+
+    .actions {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; flex-wrap: wrap; margin-top: 22px;
+    }
+    .actions-left, .actions-right { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .btn {
+      border: none; border-radius: 12px; padding: 13px 18px;
+      font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.18s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-primary { background: var(--primary); color: white; box-shadow: 0 10px 18px rgba(31,78,121,0.18); }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-strong); }
+    .btn-secondary { background: white; color: var(--text); border: 1px solid var(--line-strong); }
+    .btn-soft { background: #eef4fb; color: var(--primary); border: 1px solid #d6e5f5; }
+    .btn-success { background: var(--success); color: white; box-shadow: 0 10px 18px rgba(31,122,79,0.18); }
+    .btn-success:hover:not(:disabled) { background: #186340; }
+    .btn-edit { background: #e08e0b; color: white; box-shadow: 0 10px 18px rgba(224,142,11,0.18); }
+    .btn-edit:hover:not(:disabled) { background: #c47d09; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-sm { padding: 8px 14px; font-size: 12px; border-radius: 10px; }
+
+    .summary-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; padding: 18px 20px;
+      border: 1px solid #dce7f3;
+      background: linear-gradient(180deg, #f7fbff 0%, #eef5fb 100%);
+      border-radius: 18px; margin-bottom: 18px; flex-wrap: wrap;
+    }
+    .summary-bar strong { display: block; margin-bottom: 6px; font-size: 15px; }
+
+    .summary-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+    .summary-item { border: 1px solid var(--line); border-radius: 16px; background: white; padding: 16px; }
+    .summary-item.full { grid-column: 1 / -1; }
+    .summary-item .label { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; font-weight: 700; }
+    .summary-item .value { font-size: 15px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+
+    .submitted-card {
+      border: 1px solid #cfe5d8;
+      background: linear-gradient(180deg, #f3fcf7 0%, #eef8f2 100%);
+      border-radius: 20px; padding: 22px; margin-bottom: 18px;
+    }
+    .submitted-card h3 { margin: 0 0 8px; color: var(--success); font-size: 21px; }
+    .submitted-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .meta-pill {
+      padding: 8px 12px; border-radius: 999px;
+      background: rgba(31,122,79,0.08); border: 1px solid rgba(31,122,79,0.18);
+      color: var(--success); font-size: 12px; font-weight: 700;
+    }
+    .note { font-size: 12px; color: var(--text-muted); margin-top: 10px; line-height: 1.6; }
+
+    /* ── QA Thread ── */
+    .qa-thread { display: flex; flex-direction: column; gap: 16px; }
+    .qa-bubble { border-radius: 20px; padding: 20px; max-width: 88%; }
+    .qa-bubble.question { background: var(--primary-soft); border: 1px solid #c5d9f0; align-self: flex-start; }
+    .qa-bubble.answer { background: var(--success-soft); border: 1px solid #b8e0c8; align-self: flex-end; }
+    .qa-bubble .qa-label { font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
+    .qa-bubble.question .qa-label { color: var(--primary); }
+    .qa-bubble.answer .qa-label { color: var(--success); }
+    .qa-bubble .qa-meta { font-size: 12px; color: var(--text-muted); margin-top: 10px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .qa-bubble .qa-text { font-size: 14px; line-height: 1.7; white-space: pre-wrap; }
+    .qa-bubble .qa-text img { max-width: 100%; border-radius: 8px; margin: 8px 0; }
+    .qa-bubble .qa-text table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 13px; }
+    .qa-bubble .qa-text table th, .qa-bubble .qa-text table td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; }
+    .qa-bubble .qa-text table th { background: var(--surface-soft); font-weight: 700; }
+
+    .qa-info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 12px; }
+    .qa-info-item { background: rgba(255,255,255,0.7); border-radius: 10px; padding: 10px 12px; }
+    .qa-info-item .label { font-size: 11px; color: var(--text-muted); font-weight: 700; }
+    .qa-info-item .value { font-size: 13px; margin-top: 3px; }
+
+    .search-bar { display: flex; gap: 10px; align-items: stretch; }
+    .search-bar input { flex: 1; }
+    .search-bar .btn { white-space: nowrap; }
+
+    .loading-spinner {
+      display: inline-block; width: 18px; height: 18px;
+      border: 2px solid rgba(31,78,121,0.2); border-top-color: var(--primary);
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+    .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-state h3 { margin: 0 0 8px; color: var(--text); font-size: 18px; }
+
+    /* ── Rich Text Editor ── */
+    .editor-toolbar {
+      display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 10px;
+      background: var(--surface-soft); border: 1px solid var(--line-strong);
+      border-bottom: none; border-radius: 12px 12px 0 0;
+    }
+    .editor-toolbar button {
+      width: 34px; height: 34px; border: 1px solid transparent;
+      border-radius: 8px; background: transparent; cursor: pointer;
+      font-size: 14px; font-weight: 700; color: var(--text);
+      display: grid; place-items: center; transition: 0.15s ease;
+    }
+    .editor-toolbar button:hover { background: rgba(31,78,121,0.08); border-color: var(--line); }
+    .editor-toolbar button.active { background: var(--primary-soft); border-color: #cadcf1; color: var(--primary); }
+    .editor-toolbar .sep { width: 1px; background: var(--line); margin: 4px 6px; }
+    .editor-toolbar label {
+      width: 34px; height: 34px; border: 1px solid transparent;
+      border-radius: 8px; background: transparent; cursor: pointer;
+      font-size: 14px; display: grid; place-items: center; transition: 0.15s ease;
+    }
+    .editor-toolbar label:hover { background: rgba(31,78,121,0.08); border-color: var(--line); }
+
+    .rich-editor {
+      min-height: 200px; max-height: 500px; overflow-y: auto;
+      border: 1px solid var(--line-strong); border-radius: 0 0 12px 12px;
+      padding: 14px; font-size: 14px; line-height: 1.7; color: var(--text);
+      background: #fff; outline: none;
+    }
+    .rich-editor:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(31,78,121,0.10); }
+    .rich-editor img { max-width: 100%; border-radius: 8px; margin: 8px 0; cursor: pointer; }
+    .rich-editor table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    .rich-editor table th, .rich-editor table td {
+      border: 1px solid var(--line); padding: 8px 10px; min-width: 60px;
+    }
+    .rich-editor table th { background: var(--surface-soft); font-weight: 700; }
+
+    /* ── Attachment list ── */
+
+
+    /* ── Table dialog ── */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4); z-index: 200;
+      display: none; place-items: center;
+    }
+    .modal-overlay.show { display: grid; }
+    .modal-box {
+      background: white; border-radius: 20px; padding: 28px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.2); min-width: 320px;
+    }
+    .modal-box h3 { margin: 0 0 16px; font-size: 18px; }
+    .modal-box .field { margin-bottom: 14px; }
+    .modal-box .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+
+    .toast {
+      position: fixed; right: 22px; bottom: 22px;
+      background: white; border: 1px solid #cfe5d8; border-radius: 16px;
+      box-shadow: 0 16px 28px rgba(15,23,42,0.12); padding: 14px 16px;
+      display: flex; gap: 12px; align-items: flex-start; min-width: 290px;
+      opacity: 0; transform: translateY(20px); pointer-events: none;
+      transition: 0.25s ease; z-index: 100;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast-icon {
+      width: 34px; height: 34px; border-radius: 10px;
+      display: grid; place-items: center; background: var(--success-soft);
+      color: var(--success); font-weight: 800; flex-shrink: 0;
+    }
+    .toast-title { font-weight: 800; margin-bottom: 3px; }
+    .toast-text { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+
+    /* ── Extra handler rows ── */
+    .extra-handler-row {
+      display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px;
+      padding: 12px; background: var(--surface-soft); border: 1px solid var(--line);
+      border-radius: 14px; margin-top: 10px; align-items: end;
+    }
+    .extra-handler-row .field { gap: 4px; }
+    .extra-handler-row label { font-size: 12px; }
+    .extra-handler-row input, .extra-handler-row select { padding: 10px 12px; font-size: 13px; }
+
+    /* ── Inquiry list table ── */
+    .inquiry-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .inquiry-table th {
+      padding: 10px 12px; text-align: left; font-weight: 700; font-size: 12px;
+      background: var(--surface-soft); border-bottom: 2px solid var(--line-strong);
+      color: var(--text-muted); white-space: nowrap;
+    }
+    .inquiry-table td {
+      padding: 10px 12px; border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+    .inquiry-table tr { cursor: pointer; transition: background 0.15s; }
+    .inquiry-table tbody tr:hover { background: var(--primary-soft); }
+    .inquiry-table .status-badge {
+      padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 700;
+    }
+    .filter-bar {
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px;
+    }
+    .filter-bar .field { flex: 1; min-width: 140px; gap: 4px; }
+    .filter-bar label { font-size: 11px; font-weight: 700; color: var(--text-muted); }
+    .filter-bar input, .filter-bar select { padding: 10px 12px; font-size: 13px; }
+    .filter-bar .btn { align-self: flex-end; }
+
+    /* ── Comment thread ── */
+    .comment-thread { display: flex; flex-direction: column; gap: 0; }
+    .comment-item {
+      display: flex; gap: 14px; padding: 16px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .comment-item:last-child { border-bottom: none; }
+    .comment-avatar {
+      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; color: white;
+      background: linear-gradient(135deg, var(--primary) 0%, #3b6e9e 100%);
+    }
+    .comment-body { flex: 1; min-width: 0; }
+    .comment-header {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px;
+    }
+    .comment-who { font-size: 14px; font-weight: 700; color: var(--text); }
+    .comment-part { font-size: 12px; color: var(--text-muted); }
+    .comment-date { font-size: 12px; color: var(--text-muted); margin-left: auto; }
+    .comment-progress {
+      font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+    }
+    .comment-text {
+      font-size: 14px; line-height: 1.7; color: var(--text);
+      background: var(--surface-soft); border: 1px solid var(--line);
+      border-radius: 12px; padding: 14px 16px; white-space: pre-wrap;
+    }
+    .comment-meta { display: flex; gap: 16px; margin-top: 8px; font-size: 12px; color: var(--text-muted); }
+    /* ── Detail card (새 조회 상세 디자인) ── */
+    .detail-card {
+      background: white; border: 1px solid var(--line); border-radius: 16px;
+      overflow: hidden; margin-bottom: 16px;
+    }
+    .detail-card-header {
+      padding: 14px 20px; background: var(--surface-soft);
+      border-bottom: 1px solid var(--line);
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .detail-card-header .dc-title {
+      font-size: 14px; font-weight: 800; color: var(--text); flex: 1;
+    }
+    .detail-card-header .dc-badge {
+      font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px;
+    }
+    .detail-meta-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 0; border-bottom: 1px solid var(--line);
+    }
+    .detail-meta-item {
+      padding: 10px 18px; border-right: 1px solid var(--line);
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .detail-meta-item:last-child { border-right: none; }
+    .detail-meta-item .dm-label {
+      font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .detail-meta-item .dm-value { font-size: 13px; color: var(--text); font-weight: 500; }
+    .detail-content {
+      padding: 18px 20px; font-size: 14px; line-height: 1.75;
+      color: var(--text); white-space: pre-wrap; word-break: break-word;
+      min-height: 60px;
+    }
+    /* 답변 댓글 카드 */
+    .reply-card {
+      background: white; border: 1px solid var(--line); border-radius: 14px;
+      overflow: hidden; margin-bottom: 10px;
+    }
+    .reply-card-header {
+      padding: 10px 16px; background: var(--success-soft);
+      border-bottom: 1px solid #b8e0c8;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .reply-card-header .rc-who {
+      font-size: 13px; font-weight: 700; color: var(--success);
+    }
+    .reply-card-header .rc-part {
+      font-size: 12px; color: var(--success); opacity: 0.8;
+    }
+    .reply-card-header .rc-prog {
+      font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+      margin-left: auto;
+    }
+    .reply-card-header .rc-date {
+      font-size: 12px; color: var(--success); opacity: 0.7;
+    }
+    .reply-card-content {
+      padding: 14px 16px; font-size: 14px; line-height: 1.75;
+      color: var(--text); white-space: pre-wrap; word-break: break-word;
+    }
+    .reply-empty {
+      background: var(--warning-soft); border: 1px dashed #e8d5a0;
+      border-radius: 14px; padding: 24px; text-align: center;
+      color: var(--warning); font-size: 14px; font-weight: 600;
+    }
+    .reply-section-title {
+      font-size: 13px; font-weight: 700; color: var(--text-muted);
+      margin: 16px 0 8px; display: flex; align-items: center; gap: 8px;
+    }
+    .reply-count-badge {
+      background: var(--success); color: white; border-radius: 999px;
+      padding: 1px 8px; font-size: 11px;
+    }
+
+    .comment-pending {
+      text-align: center; padding: 32px; color: var(--text-muted);
+      background: var(--warning-soft); border: 1px dashed #e8d5a0;
+      border-radius: 16px; font-size: 14px;
+    }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex; align-items: center; justify-content: center;
+      gap: 6px; margin-top: 16px; flex-wrap: wrap;
+    }
+    .pagination button {
+      min-width: 36px; height: 36px; border: 1px solid var(--line-strong);
+      border-radius: 8px; background: white; color: var(--text);
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.15s;
+    }
+    .pagination button:hover:not(:disabled) { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+    .pagination button.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .pagination .page-info { font-size: 13px; color: var(--text-muted); padding: 0 8px; }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 980px) {
+      .shell { grid-template-columns: 1fr; }
+      .panel { position: static; }
+    }
+    @media (max-width: 720px) {
+      .content, .hero { padding-left: 20px; padding-right: 20px; }
+      .grid, .summary-grid, .qa-info-grid { grid-template-columns: 1fr; }
+      .hero h2 { font-size: 24px; }
+      .input-row { flex-direction: column; }
+      .actions { align-items: stretch; }
+      .qa-bubble { max-width: 100%; }
+      .search-bar { flex-direction: column; }
+      .extra-handler-row { grid-template-columns: 1fr; }
+      .filter-bar { flex-direction: column; }
+      .filter-bar .field { min-width: 100%; }
+    }
+ </style>
+</head>
+<body>
+ <div class="shell">
+ <aside class="panel">
+ <div class="brand">
+ <div class="brand-mark">📑</div>
+ <div>
+ <h1>유관부서 요청 접수</h1>
+ <p>질문 등록 · 답변 등록 · 응답 조회</p>
+ </div>
+ </div>
+
+ <div class="tab-nav">
+ <button class="tab-btn active" onclick="switchTab('request')" id="tabBtnRequest">📝 질문</button>
+ <button class="tab-btn" onclick="switchTab('answer')" id="tabBtnAnswer">💬 답변</button>
+ <button class="tab-btn" onclick="switchTab('inquiry')" id="tabBtnInquiry">🔍 조회</button>
+ </div>
+
+ <div class="sidebar-context active" id="sidebarRequest">
+ <p class="muted">작성부터 확인, 제출까지 한 화면 흐름으로 사용할 수 있습니다.</p>
+ <div class="step-list">
+ <div class="step-item active" id="stepWrite">
+ <div class="step-no">1</div>
+ <div><div class="step-title">요청 작성</div><div class="muted">필수 항목 입력</div></div>
+ </div>
+ <div class="step-item" id="stepReview">
+ <div class="step-no">2</div>
+ <div><div class="step-title">내용 재확인</div><div class="muted">제출 전 오입력 확인</div></div>
+ </div>
+ <div class="step-item" id="stepDone">
+ <div class="step-no">3</div>
+ <div><div class="step-title">제출 완료</div><div class="muted">접수번호 발급</div></div>
+ </div>
+ </div>
+ <div class="helper-box">
+ <strong>📌 안내</strong>
+ <ul>
+ <li>제출 시 Google Sheets에 자동 저장</li>
+ <li>고유 접수번호 자동 부여</li>
+ <li>담당팀에 자동 메일 발송</li>
+ </ul>
+ </div>
+ <div class="helper-box" style="margin-top:12px;border-color:#f0c0b0;background:linear-gradient(180deg,#fff8f5,#fff3ef);">
+ <strong>⚠️ 제출 시 유의사항</strong>
+ <ul>
+ <li>요청서 작성 후 <b>"응답 내용 확인"</b> 버튼을 눌러 입력 내용을 반드시 확인하세요.</li>
+ <li>재확인 화면에서 <b>"최종 제출"</b> 버튼을 눌러야 정상적으로 접수됩니다.</li>
+ <li>재확인 없이 브라우저를 닫으면 요청이 저장되지 않습니다.</li>
+ </ul>
+ </div>
+ </div>
+
+ <div class="sidebar-context" id="sidebarAnswer">
+ <p class="muted">요청자 이름을 검색하면 해당 질문을 불러와 답변을 작성할 수 있습니다.</p>
+ <div class="helper-box" style="margin-top:16px;">
+ <strong>답변 등록 흐름</strong>
+ <ul>
+ <li>요청자 이름 검색 → 접수번호 선택</li>
+ <li>해당 질문 내용 자동 표시</li>
+ <li>리치 텍스트 에디터로 답변 작성</li>
+ <li>이미지 삽입 가능</li>
+ <li>담당부서 최대 3개까지 추가 가능</li>
+ <li>제출 시 모든 담당자에게 메일 발송</li>
+ </ul>
+ </div>
+ </div>
+
+ <div class="sidebar-context" id="sidebarInquiry">
+ <p class="muted">접수번호를 입력하여 기술 문의 진행 상황을 확인하세요.</p>
+ <div class="helper-box" style="margin-top:16px;">
+ <strong>📋 조회 안내</strong>
+ <ul>
+ <li>전체 요청 목록이 테이블로 표시됩니다</li>
+ <li>이름, 고객사, 장비명, 기간으로 필터링</li>
+ <li>행 클릭 시 상세 조회</li>
+ <li><span style="color:var(--success);font-weight:700;">답변 완료</span> — 초록색 배지</li>
+ <li><span style="color:var(--warning);font-weight:700;">답변 대기</span> — 노란색 배경</li>
+ <li>전체 데이터 엑셀 다운로드 가능</li>
+ </ul>
+ </div>
+ </div>
+ </aside>
+
+ <main class="main-card">
+ <div class="hero">
+ <div class="hero-top">
+ <div>
+ <h2>유관부서 요청 접수 시스템</h2>
+ <p>부서 간 요청사항을 표준 양식으로 접수하고, 답변을 등록하며, 처리 이력을 조회할 수 있는 업무용 시스템입니다.</p>
+ </div>
+ <div class="hero-chip-group">
+ <div class="hero-chip">질문 등록</div>
+ <div class="hero-chip">답변 등록</div>
+ <div class="hero-chip">응답 조회</div>
+ </div>
+ </div>
+ </div>
+
+ <div class="content">
+ <!-- ════ TAB 1: 질문 등록 ════ -->
+ <div class="tab-content active" id="tabRequest">
+ <section class="view active" id="editView">
+ <form id="requestForm">
+ <div class="section">
+ <div class="section-header">
+ <div><h3 class="section-title">요청자 정보</h3><div class="section-desc">자동완성과 직접 입력 모두 가능합니다.</div></div>
+ <span class="badge">기본 정보</span>
+ </div>
+ <div class="section-body">
+ <div class="grid">
+ <div class="field">
+ <label>요청자명 <span class="required">필수</span></label>
+ <div class="autocomplete-wrap">
+ <input type="text" id="requesterName" placeholder="이름을 입력하세요" required autocomplete="off" oninput="handleNameInput(this.value)" onkeydown="handleKeyDown(event)">
+ <div class="autocomplete-list" id="autocompleteList"></div>
+ </div>
+ </div>
+ <div class="field">
+ <label>요청부서 <span class="badge">자동입력</span></label>
+ <input type="text" id="requesterDept" placeholder="이름 선택 시 자동완성" readonly>
+ </div>
+ <div class="field">
+ <label>요청자 이메일</label>
+ <input type="email" id="requesterEmail" placeholder="이메일 입력">
+ </div>
+ <div class="field">
+ <label>요청일자 <span class="badge">자동</span></label>
+ <input type="text" id="requestDate" readonly>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <div class="section">
+ <div class="section-header">
+ <div><h3 class="section-title">요청 상세</h3><div class="section-desc">요청 대상과 산출물 형식을 명확히 적어주세요.</div></div>
+ <span class="badge">업무 입력</span>
+ </div>
+ <div class="section-body">
+ <div class="grid">
+ <div class="field">
+ <label>고객사 <span class="required">필수</span></label>
+ <div class="hint">💡 Ctrl(⌘)/Shift로 다중 선택</div>
+ <div class="input-row">
+ <select id="customerSelect" multiple size="5" style="min-height:120px;" onchange="handleCustomerChange()" required>
+ <option value="SEC">SEC</option><option value="Micron">Micron</option>
+ <option value="ASM">ASM</option><option value="Micron JP">Micron JP</option>
+ <option value="YMTC">YMTC</option><option value="유진테크">유진테크</option>
+ <option value="삼성전자">삼성전자</option><option value="하이닉스">하이닉스</option>
+ <option value="기타">기타 (직접입력)</option>
+ </select>
+ <input type="text" id="customerCustom" class="hidden" placeholder="고객사 직접 입력">
+ </div>
+ </div>
+ <div class="field">
+ <label>LOCATION <span class="required">필수</span></label>
+ <div class="hint">💡 Ctrl(⌘)/Shift로 다중 선택</div>
+ <div class="input-row">
+ <select id="locationSelect" multiple size="5" style="min-height:120px;" onchange="handleLocationChange()" required>
+ <option value="화성">화성</option><option value="대만">대만</option>
+ <option value="일본">일본</option><option value="중국">중국</option>
+ <option value="평택">평택</option><option value="우한">우한</option>
+ <option value="탕정">탕정</option><option value="시안">시안</option>
+ <option value="기타">기타 (직접입력)</option>
+ </select>
+ <input type="text" id="locationCustom" class="hidden" placeholder="LOCATION 직접 입력">
+ </div>
+ </div>
+ <div class="field">
+ <label>LINE</label>
+ <div class="hint">💡 Ctrl(⌘)/Shift로 다중 선택</div>
+ <div class="input-row">
+ <select id="lineSelect" multiple size="4" style="min-height:100px;" onchange="handleLineChange()">
+ <option value="F16">F16</option><option value="F15">F15</option>
+ <option value="전체">전체</option><option value="FAB-1">FAB-1</option>
+ <option value="기타">기타 (직접입력)</option>
+ </select>
+ <input type="text" id="lineCustom" class="hidden" placeholder="LINE 직접 입력">
+ </div>
+ </div>
+ <div class="field">
+ <label>장비명</label>
+ <input type="text" id="equipmentName" placeholder="장비명을 입력하세요">
+ </div>
+ <div class="field">
+ <label>제품군</label>
+ <div class="input-row">
+ <select id="productGroupSelect" onchange="handleProductGroupChange(this.value)">
+ <option value="">선택하세요</option>
+ <option value="스크러버">스크러버</option>
+ <option value="칠러">칠러</option>
+ <option value="액침냉각">액침냉각</option>
+ <option value="기타">기타 (직접입력)</option>
+ </select>
+ <input type="text" id="productGroupCustom" class="hidden" placeholder="제품군 직접 입력">
+ </div>
+ </div>
+ <div class="field">
+ <label>분류 <span class="required">필수</span></label>
+ <div class="input-row">
+ <select id="categorySelect" onchange="handleCategoryChange(this.value)" required>
+ <option value="">선택하세요</option>
+ <option value="문의">문의</option><option value="자료 요청">자료 요청</option>
+ <option value="가능 여부 확인/검토">가능 여부 확인/검토</option>
+ <option value="변경 요청">변경 요청</option><option value="프로그램 요청">프로그램 요청</option>
+ <option value="기타">기타 (직접입력)</option>
+ </select>
+ <input type="text" id="categoryCustom" class="hidden" placeholder="분류 직접 입력">
+ </div>
+ </div>
+ <div class="field">
+ <label>문서형식</label>
+ <select id="docType">
+ <option value="">선택하세요</option>
+ <option value="이메일">이메일</option><option value="자료">자료</option>
+ <option value="PPT">PPT</option><option value="엑셀">엑셀</option>
+ <option value="이미지">이미지</option>
+ </select>
+ </div>
+ <div class="field">
+ <label>납기일 <span class="required">필수</span></label>
+ <input type="date" id="dueDate" required>
+ </div>
+ <!-- 요청내용 리치 에디터 + 첨부파일 -->
+ <div class="field full">
+ <label>요청내용 <span class="required">필수</span></label>
+ <div class="editor-toolbar">
+ <button type="button" onclick="reqEditorCmd('bold')" title="굵게"><b>B</b></button>
+ <button type="button" onclick="reqEditorCmd('italic')" title="기울임"><i>I</i></button>
+ <button type="button" onclick="reqEditorCmd('underline')" title="밑줄"><u>U</u></button>
+ <button type="button" onclick="reqEditorCmd('strikeThrough')" title="취소선"><s>S</s></button>
+ <div class="sep"></div>
+ <button type="button" onclick="reqEditorCmd('insertUnorderedList')" title="목록">•</button>
+ <button type="button" onclick="reqEditorCmd('insertOrderedList')" title="번호목록">1.</button>
+ <div class="sep"></div>
+ <button type="button" onclick="reqEditorFontSize('5')" title="큰 글씨">A+</button>
+ <button type="button" onclick="reqEditorFontSize('3')" title="보통 글씨">A</button>
+ <div class="sep"></div>
+ <label title="이미지 삽입" style="cursor:pointer;">🖼️
+ <input type="file" accept="image/*" multiple onchange="insertRequestImages(this.files)" style="display:none;">
+ </label>
+ <div class="sep"></div>
+ <div class="sep"></div>
+ <button type="button" onclick="reqEditorCmd('removeFormat')" title="서식 제거">✕</button>
+ </div>
+
+ 
+ <div class="rich-editor" id="requestContentEditor" contenteditable="true" data-placeholder="요청하시는 내용을 자세히 입력해주세요."></div>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <div class="actions">
+ <div class="actions-left"><button type="button" class="btn btn-secondary" onclick="resetFormData()">초기화</button></div>
+ <div class="actions-right"><button type="button" class="btn btn-soft" onclick="goPreview()">응답 내용 확인</button></div>
+ </div>
+ </form>
+ </section>
+
+ <section class="view" id="previewView">
+ <div class="summary-bar">
+ <div><strong>제출 전 재확인 화면</strong><div class="muted">입력한 내용이 아래와 같이 접수됩니다.</div></div>
+ <span class="badge">검토 단계</span>
+ </div>
+ <div class="section">
+ <div class="section-header"><div><h3 class="section-title">요청 요약</h3></div><span class="badge">미리보기</span></div>
+ <div class="section-body"><div class="summary-grid" id="previewSummary"></div></div>
+ </div>
+ <div class="actions">
+ <div class="actions-left"><button type="button" class="btn btn-secondary" onclick="backToEdit()">수정하기</button></div>
+ <div class="actions-right"><button type="button" class="btn btn-primary" id="submitBtn" onclick="finalSubmit()">최종 제출</button></div>
+ </div>
+ </section>
+
+ <section class="view" id="submittedView">
+ <div class="submitted-card">
+ <h3>✅ 접수가 완료되었습니다</h3>
+ <p class="muted">아래 접수번호를 메모해 두세요. 답변 조회 시 필요합니다.</p>
+ <div class="submitted-meta">
+ <div class="meta-pill" id="submittedNo">접수번호 -</div>
+ <div class="meta-pill" id="submittedAt">제출시각 -</div>
+ <div class="meta-pill" id="submittedStatus">상태: 접수 완료</div>
+ </div>
+ </div>
+ <div class="section">
+ <div class="section-header"><div><h3 class="section-title">제출된 요청 내용</h3></div><span class="badge">접수 완료</span></div>
+ <div class="section-body"><div class="summary-grid" id="submittedSummary"></div></div>
+ </div>
+ <div class="actions">
+ <div class="actions-left"><button type="button" class="btn btn-secondary" onclick="resetFormData()">새 요청 작성</button></div>
+ <div class="actions-right"><button type="button" class="btn btn-soft" onclick="switchTab('inquiry')">응답 조회로 이동</button></div>
+ </div>
+ </section>
+ </div>
+
+ <!-- ════ TAB 2: 답변 등록 ════ -->
+ <div class="tab-content" id="tabAnswer">
+ <div class="section">
+ <div class="section-header">
+ <div><h3 class="section-title">요청자 검색</h3><div class="section-desc">답변할 요청자의 이름을 검색한 후, 접수번호를 선택하세요</div></div>
+ <span class="badge">검색</span>
+ </div>
+ <div class="section-body">
+ <div class="field" style="margin-bottom:14px;">
+ <label>요청자 이름 <span class="required">필수</span></label>
+ <div class="search-bar">
+ <input type="text" id="answerRequesterSearch" placeholder="요청자 이름 또는 접수번호" onkeydown="if(event.key==='Enter'){event.preventDefault();searchRequesterRequests(this.value);}">
+ <button type="button" class="btn btn-primary" onclick="searchRequesterRequests(document.getElementById('answerRequesterSearch').value)">검색</button>
+ </div>
+ </div>
+ <div id="answerRequesterStatus" style="margin-top:8px;"></div>
+ <div class="field hidden" id="answerReqNoSelectWrap" style="margin-top:14px;">
+ <label>접수번호 선택 <span class="required">필수</span></label>
+ <select id="answerReqNoSelect" onchange="loadSelectedRequest(this.value)" style="font-size:14px;">
+ <option value="">접수번호를 선택하세요</option>
+ </select>
+ </div>
+ <div id="answerSearchStatus" style="margin-top:12px;"></div>
+ </div>
+ </div>
+
+ <div id="answerQuestionSection" class="hidden">
+ <div class="section">
+ <div class="section-header">
+ <div><h3 class="section-title">요청 내용</h3><div class="section-desc" id="answerReqNo"></div></div>
+ <span class="badge" id="answerStatusBadge">접수됨</span>
+ </div>
+ <div class="section-body">
+ <div class="summary-grid" id="answerQuestionSummary"></div>
+ </div>
+ </div>
+
+ <!-- 기존 답변 스레드 (댓글형 누적) -->
+ <div class="section hidden" id="existingAnswersSection">
+ <div class="section-header">
+ <div><h3 class="section-title">기존 답변 내역</h3><div class="section-desc">이전에 등록된 답변들이 표시됩니다</div></div>
+ <span class="badge badge-success" id="existingAnswerCount">0건</span>
+ </div>
+ <div class="section-body">
+ <div class="qa-thread" id="existingAnswersThread"></div>
+ </div>
+ </div>
+
+ <div class="section">
+ <div class="section-header">
+ <div><h3 class="section-title">답변 작성</h3><div class="section-desc">서식, 이미지를 포함한 답변을 작성할 수 있습니다</div></div>
+ <span class="badge badge-warning">작성 중</span>
+ </div>
+ <div class="section-body">
+
+ <div class="grid">
+ <!-- 담당부서 1 (개발혁신팀 기본) -->
+ <div class="field">
+ <label>담당파트</label>
+ <select id="answerPart" onchange="onPartChange(this.value)">
+ <option value="">선택하세요</option>
+ </select>
+ <div id="partWarning" class="hidden"></div>
+ </div>
+ <div class="field">
+ <label>진행사항</label>
+ <select id="answerProgress" onchange="handleProgressChange(this.value)">
+ <option value="완료">완료</option><option value="진행중">진행중</option>
+ <option value="Hold">Hold</option><option value="미진행">미진행</option>
+ <option value="담당부서 지정">담당부서 지정</option>
+ </select>
+ <div id="multiDeptProgressHint" class="hidden" style="margin-top:6px;padding:8px 12px;border-radius:8px;background:#eaf2fb;border:1px solid #cadcf1;font-size:12px;color:var(--primary);line-height:1.6;">
+   ℹ️ 추가 담당부서가 지정되었습니다. 각 부서가 독립적으로 답변을 등록합니다.
+ </div>
+ </div>
+ <div class="field">
+ <label>처리담당자 <span class="required">필수</span></label>
+ <div class="autocomplete-wrap">
+ <input type="text" id="answerHandler" placeholder="담당자명 입력" autocomplete="off" oninput="handleAnswerNameInput(this.value)" onkeydown="handleAnswerKeyDown(event)">
+ <div class="autocomplete-list" id="answerAutocompleteList"></div>
+ </div>
+ </div>
+ <div class="field">
+ <label>처리담당자 이메일 <span class="badge">자동입력</span></label>
+ <input type="text" id="answerHandlerEmail" placeholder="이름 선택 시 자동완성">
+ </div>
+ <div class="field">
+ <label>공수(Day)</label>
+ <input type="number" id="answerManday" placeholder="예: 3" min="0" step="0.5">
+ </div>
+ <div class="field" id="answerReasonField" style="display:none;">
+ <label>사유 <span id="reasonRequiredMark" class="required" style="display:none;">필수</span></label>
+ <input type="text" id="answerReason" placeholder="미진행 또는 Hold 사유">
+ </div>
+ </div>
+
+ <!-- ▼ 개발혁신팀 전용 토글 영역 ▼ -->
+ <div style="margin-top:14px;">
+   <button type="button" class="btn btn-soft btn-sm" id="toggleDevTeamBtn"
+     onclick="toggleDevTeamMode()"
+     style="background:var(--primary);color:white;font-weight:700;padding:8px 16px;">
+     🏢 개발혁신팀 전용 추가 기능 펼치기
+   </button>
+ </div>
+ <div id="devTeamSection" class="hidden" style="margin-top:12px;padding:14px;border:1px solid var(--primary-soft);border-radius:14px;background:var(--primary-soft);">
+   <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:10px;">🏢 개발혁신팀 전용 — 담당부서 지정 기능</div>
+   <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+     <label style="font-size:13px;font-weight:700;color:#425466;">추가 담당부서</label>
+     <button type="button" class="btn btn-soft btn-sm" onclick="addExtraHandler()" id="addHandlerBtn">+ 담당부서 추가</button>
+   </div>
+   <div id="extraHandlerContainer"></div>
+   <div style="margin-top:10px;">
+     <button type="button" class="btn btn-soft btn-sm" onclick="insertPartTemplate()" style="font-size:12px;">📋 담당자 지정 요청 템플릿 자동완성</button>
+   </div>
+ </div>
+
+ <!-- Rich Text Editor + 첨부파일 -->
+ <div class="field full" style="margin-top:16px;">
+ <label>답변내용 <span class="required">필수</span></label>
+ <div class="editor-toolbar">
+ <button type="button" onclick="editorCmd('bold')" title="굵게"><b>B</b></button>
+ <button type="button" onclick="editorCmd('italic')" title="기울임"><i>I</i></button>
+ <button type="button" onclick="editorCmd('underline')" title="밑줄"><u>U</u></button>
+ <button type="button" onclick="editorCmd('strikeThrough')" title="취소선"><s>S</s></button>
+ <div class="sep"></div>
+ <button type="button" onclick="editorCmd('insertUnorderedList')" title="목록">•</button>
+ <button type="button" onclick="editorCmd('insertOrderedList')" title="번호목록">1.</button>
+ <div class="sep"></div>
+ <button type="button" onclick="editorFontSize('5')" title="큰 글씨">A+</button>
+ <button type="button" onclick="editorFontSize('3')" title="보통 글씨">A</button>
+ <div class="sep"></div>
+ <label title="이미지 삽입" style="cursor:pointer;">🖼️
+ <input type="file" accept="image/*" multiple onchange="insertImages(this.files)" style="display:none;">
+ </label>
+ <div class="sep"></div>
+ <button type="button" onclick="editorCmd('removeFormat')" title="서식 제거">✕</button>
+
+ </div>
+ <div class="rich-editor" id="answerContentEditor" contenteditable="true" data-placeholder="요청에 대한 답변 내용을 작성하세요."></div>
+ </div>
+
+
+ <div class="grid" style="margin-top:12px;">
+ <div class="field">
+ <label>파일 저장 경로</label>
+ <input type="text" id="answerFilePath" placeholder="예: \\서버\\공유폴더\\파일명.xlsx">
+ </div>
+ <div class="field">
+ <label>파일명</label>
+ <input type="text" id="answerFileName" placeholder="첨부 파일명">
+ </div>
+ </div>
+ <div style="margin-top:12px;padding:11px 14px;border-radius:10px;background:#fef9ec;border:1px solid #e8d5a0;font-size:12px;color:#7a5500;line-height:1.8;">
+   📌 <b>첨부파일 안내</b><br>
+   보안 정책에 따라 파일 직접 첨부는 지원하지 않습니다.<br>
+   첨부가 필요한 파일은 사내 공유 드라이브(서버)에 저장 후, 아래 경로 및 파일명 입력란에 기재해 주세요.<br>
+   예) <span style="font-family:monospace;background:#fff3cd;padding:1px 4px;border-radius:3px;">\\서버명\\공유폴더\\담당팀\\파일명.xlsx</span>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <div class="actions">
+ <div class="actions-left"><button type="button" class="btn btn-secondary" onclick="clearAnswerForm()">초기화</button></div>
+ <div class="actions-right"><button type="button" class="btn btn-success" id="answerSubmitBtn" onclick="submitAnswer()">답변 제출</button></div>
+ </div>
+ </div>
+
+ <div id="answerDoneSection" class="hidden">
+ <div class="submitted-card">
+ <h3>✅ 답변이 등록되었습니다</h3>
+ <p class="muted">요청자 및 모든 담당자에게 완료 메일이 자동 발송됩니다.</p>
+ <div class="submitted-meta">
+ <div class="meta-pill" id="answerDoneNo">접수번호 -</div>
+ <div class="meta-pill" id="answerDoneAt">답변시각 -</div>
+ </div>
+ </div>
+ <div class="actions">
+ <div class="actions-right"><button type="button" class="btn btn-soft" onclick="clearAnswerForm()">다른 요청 답변하기</button></div>
+ </div>
+ </div>
+ </div>
+
+ <!-- ════ TAB 3: 응답 조회 (필터 + 리스트) ════ -->
+ <div class="tab-content" id="tabInquiry">
+ <div class="section">
+ <div class="section-header">
+ <div><h3 class="section-title">요청 목록 조회</h3><div class="section-desc">전체 요청 목록을 필터링하여 조회합니다.</div></div>
+ <div style="display:flex;gap:8px;">
+ <button type="button" class="btn btn-primary btn-sm" onclick="loadInquiryList()">🔄 새로고침</button>
+ <button type="button" class="btn btn-soft btn-sm" onclick="downloadExcel()">📥 엑셀</button>
+ </div>
+ </div>
+ <div class="section-body">
+ <!-- 7. 필터 바 -->
+ <div class="filter-bar">
+ <div class="field">
+ <label>요청자명</label>
+ <input type="text" id="filterName" placeholder="이름 검색">
+ </div>
+ <div class="field">
+ <label>고객사</label>
+ <input type="text" id="filterCustomer" placeholder="고객사 검색">
+ </div>
+ <div class="field">
+ <label>장비명</label>
+ <input type="text" id="filterEquipment" placeholder="장비명 검색">
+ </div>
+ <div class="field">
+ <label>기간 (시작)</label>
+ <input type="date" id="filterDateFrom">
+ </div>
+ <div class="field">
+ <label>기간 (끝)</label>
+ <input type="date" id="filterDateTo">
+ </div>
+ <button type="button" class="btn btn-primary btn-sm" onclick="applyInquiryFilter()">검색</button>
+ <button type="button" class="btn btn-secondary btn-sm" onclick="clearInquiryFilter()">초기화</button>
+ </div>
+
+ <div id="inquiryListStatus" style="margin-bottom:12px;"></div>
+ <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+   <button type="button" class="btn btn-danger btn-sm" id="deleteSelectedBtn" onclick="deleteSelectedRows()" style="display:none;">🗑️ 선택 삭제</button>
+ </div>
+ <div style="overflow-x:auto;">
+ <table class="inquiry-table" id="inquiryTable">
+ <thead>
+ <tr>
+ <th style="width:36px;"><input type="checkbox" id="checkAll" onchange="toggleCheckAll(this)" title="전체 선택"></th>
+ <th>접수번호</th>
+ <th>요청자</th>
+ <th>요청부서</th>
+ <th>고객사</th>
+ <th>장비명</th>
+ <th>분류</th>
+ <th>요청일</th>
+ <th>납기일</th>
+ <th>상태</th>
+ </tr>
+ </thead>
+ <tbody id="inquiryTableBody"></tbody>
+ </table>
+ </div>
+ <div class="pagination" id="inquiryPagination"></div>
+ </div>
+ </div>
+
+ <div id="inquiryResultSection" class="hidden">
+ <div class="section">
+ <div class="section-header">
+ <div><h3 class="section-title">문의 내역</h3><div class="section-desc" id="inquiryReqNo"></div></div>
+ <div style="display:flex;gap:8px;align-items:center;">
+ <span class="badge" id="inquiryStatusBadge">조회</span>
+ <button type="button" class="btn btn-secondary btn-sm" onclick="closeInquiryDetail()">← 목록</button>
+ </div>
+ </div>
+ <div class="section-body">
+ <div class="qa-thread" id="inquiryThread"></div>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ </div>
+ </main>
+ </div>
+ </div>
+
+ <!-- Request Table Insert Dialog -->
+ </div>
+
+ <div class="toast" id="toast">
+ <div class="toast-icon">✓</div>
+ <div>
+ <div class="toast-title">완료</div>
+ <div class="toast-text" id="toastText">정상 처리되었습니다.</div>
+ </div>
+ </div>
+
+ <script>
+    // ══════════════════════════════════════════════════════════════
+    // 설정
+    // ══════════════════════════════════════════════════════════════
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyuu3Gmxrx2ystRvdnFQ6JxyLOyFsQhGFBLReQXrjx1Kouuoy4FJknetEVxwuOVfYcu/exec';
+    // ※ GAS(Google Apps Script)에 아래 액션을 추가해야 직원 연동이 작동합니다:
+    //   action=getEmployees → '직원정보' 시트를 읽어 { name,dept,email,rank,title } 배열 반환
+    //   (GAS 코드 예시는 아래 주석 블록 참고)
+    /*
+    ── GAS doGet 핸들러에 추가할 코드 ──────────────────────────────
+    if (action === 'getEmployees') {
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      const sh = ss.getSheetByName('직원정보');
+      if (!sh) return jsonResponse({ success: false, message: '직원정보 시트 없음' });
+      const rows = sh.getDataRange().getValues();
+      const header = rows[0]; // [이름, 부서, 이메일, 직급, 직책]
+      const iName  = header.indexOf('이름');
+      const iDept  = header.indexOf('부서');
+      const iEmail = header.indexOf('이메일');
+      const iRank  = header.indexOf('직급');
+      const iTitle = header.indexOf('직책');
+      const data = rows.slice(1).map(r => ({
+        name:  r[iName]  || '',
+        dept:  r[iDept]  || '',
+        email: r[iEmail] || '',
+        rank:  r[iRank]  || '',
+        title: r[iTitle] || ''
+      })).filter(e => e.name);
+      return jsonResponse({ success: true, data });
+    }
+    ────────────────────────────────────────────────────────────────
+    */
+
+    // ══════════════════════════════════════════════════════════════
+    // 직원 자동완성 데이터 — 구글 시트 '직원정보' 시트에서 자동 로드
+    // 형식: { name, dept, email, rank, title }
+    // ══════════════════════════════════════════════════════════════
+    let employees = [];   // 로드 완료 후 채워짐
+    let _employeesLoaded = false;
+
+    async function loadEmployees() {
+      if (_employeesLoaded) return;
+      try {
+        const res  = await fetch(`${GAS_WEB_APP_URL}?action=getEmployees&_=${Date.now()}`, { cache: 'no-store' });
+        const json = await res.json();
+        if (json && json.success && Array.isArray(json.data)) {
+          employees = json.data.map(r => ({
+            name:  String(r.name  || r['이름']  || '').trim(),
+            dept:  String(r.dept  || r['부서']  || '').trim(),
+            email: String(r.email || r['이메일'] || '').trim(),
+            rank:  String(r.rank  || r['직급']  || '').trim(),
+            title: String(r.title || r['직책']  || '').trim()
+          })).filter(e => e.name);
+          _employeesLoaded = true;
+          // 부서 드롭다운도 직원 목록 기준으로 갱신
+          const depts = [...new Set(employees.map(e => e.dept).filter(Boolean))].sort();
+          deptList = depts;
+          populateDeptSelect('answerPart', depts);
+        }
+      } catch(e) {
+        console.warn('직원 목록 로드 실패:', e);
+      }
+    }
+
+    // 페이지 로드 시 즉시 직원 목록 불러오기
+    loadEmployees();
+    // ══════════════════════════════════════════════════════════════
+
+    let selectedEmployee = null, autocompleteIndex = -1, filteredList = [];
+    let formSnapshot = null, submittedInfo = null;
+    let answerSelectedEmployee = null, answerAutocompleteIndex = -1, answerFilteredList = [];
+    let deptList = [];
+    let extraHandlerCount = 0;
+    const MAX_EXTRA_HANDLERS = 3; // 최대 2개 추가 (총 3개)
+
+    let allInquiryData = [];
+    let _inquiryFiltered = [];   // 현재 필터 적용된 전체 목록
+    let _currentPage = 1;
+    const PAGE_SIZE = 20;     // 조회 탭 전체 데이터 캐시
+
+    const today = new Date();
+    document.getElementById('requestDate').value = formatDate(today);
+    document.getElementById('dueDate').min = formatDateForInput(today);
+    initDeptDropdown();
+
+    // ── URL 파라미터: ?tab=answer&no=접수번호 → 자동 이동 ──
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      const noParam  = params.get('no');
+      if (tabParam === 'answer' && noParam) {
+        setTimeout(function() {
+          switchTab('answer');
+          const inp = document.getElementById('answerRequesterSearch');
+          if (inp) { inp.value = noParam; searchRequesterRequests(noParam); }
+        }, 600);
+      }
+    })();
+
+    // ── Utility ──
+    function formatDate(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+    function formatDateForInput(d) { return d.toISOString().split('T')[0]; }
+    function formatDateTime(d) { return `${formatDate(d)} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+    function escapeHtml(v) { return String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
+    // 줄바꿈 보존 버전 (Sheets 텍스트 표시용)
+    function escapeHtmlNl(v) { return escapeHtml(v).replace(/\n/g,'<br>').replace(/\r/g,''); }
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      document.getElementById('toastText').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => t.classList.remove('show'), 2600);
+    }
+    function toggleDevTeamMode() {
+      const sec = document.getElementById('devTeamSection');
+      const btn = document.getElementById('toggleDevTeamBtn');
+      const isHidden = sec.classList.contains('hidden');
+      sec.classList.toggle('hidden');
+      btn.textContent = isHidden ? '🏢 개발혁신팀 전용 추가 기능 접기' : '🏢 개발혁신팀 전용 추가 기능 펼치기';
+      btn.style.background = isHidden ? '#e08e0b' : 'var(--primary)';
+    }
+
+
+        function progressIcon(p) {
+      if (!p) return '⏳';
+      if (p === '완료') return '✅';
+      if (p === '진행중') return '🔄';
+      if (p === 'Hold') return '⏸️';
+      if (p === '미진행') return '❌';
+      if (p.startsWith('담당부서')) return '➡️';
+      return '⏳';
+    }
+
+    function generateRequestNo() {
+      const d = new Date();
+      const datePart = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+      const timePart = `${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}${String(d.getSeconds()).padStart(2,'0')}`;
+      const msPart = String(d.getMilliseconds()).padStart(3,'0');
+      const rand = String(Math.floor(Math.random()*100)).padStart(2,'0');
+      return `REQ-${datePart}-${timePart}${msPart}${rand}`;
+    }
+
+
+    // ── Data lookup ──
+    function stripHtmlTags(html) {
+      const div = document.createElement('div');
+      div.innerHTML = String(html || '');
+      return (div.textContent || div.innerText || '').trim();
+    }
+
+    function normalizeRecord(row) {
+      const safeRow = row && typeof row === 'object' ? row : {};
+      const requester = String(safeRow.requesterName || safeRow.requester || '').trim();
+      const requestContentHTML = String(safeRow.requestContentHTML || '').trim();
+      const requestContent = String(safeRow.requestContent || safeRow.content || '').trim();
+      const answerText = String(safeRow.answer || '').trim();
+      // GAS v3: answers[] 배열이 이미 있으면 그대로, 없으면 단일 answer로 구성
+      let answers = Array.isArray(safeRow.answers) ? safeRow.answers : [];
+      if (answers.length === 0 && (answerText || String(safeRow.handler || '').trim())) {
+        answers = [{
+          handler:   String(safeRow.handler   || ''),
+          part:      String(safeRow.part      || ''),
+          progress:  String(safeRow.progress  || ''),
+          replyDate: String(safeRow.replyDate || ''),
+          answer:    answerText
+        }];
+      }
+      return {
+        ...safeRow,
+        requesterName: requester,
+        requester,
+        content: requestContent || stripHtmlTags(requestContentHTML),
+        requestContent: requestContent || stripHtmlTags(requestContentHTML),
+        requestContentHTML,
+        answer: answerText,
+        answers,
+        equipmentName: String(safeRow.equipmentName || '').trim()
+      };
+    }
+    function normalizeRecords(rows) { return Array.isArray(rows) ? rows.map(normalizeRecord) : []; }
+    function isRequestNoKeyword(value) { const k = String(value||'').trim(); return /^REQ-/i.test(k) || /^\d+$/.test(k); }
+    function sortRequestsNewestFirst(rows) { return [...rows].sort((a,b) => String(b.requestNo||'').localeCompare(String(a.requestNo||''),'ko')); }
+
+    async function fetchJsonWithTimeout(url) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      try {
+        const res = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.json();
+      } finally { clearTimeout(timeout); }
+    }
+
+    async function lookupByNo(no) {
+      try {
+        const json = await fetchJsonWithTimeout(`${GAS_WEB_APP_URL}?action=getByNo&no=${encodeURIComponent(no)}&_=${Date.now()}`);
+        if (json.success && json.data) return normalizeRecord(json.data);
+      } catch(e) { console.warn('lookupByNo failed:', e); }
+      return null;
+    }
+
+    async function getAllData() {
+      try {
+        const json = await fetchJsonWithTimeout(`${GAS_WEB_APP_URL}?action=getAll&_=${Date.now()}`);
+        if (json && json.success && Array.isArray(json.data)) return normalizeRecords(json.data);
+        return [];
+      } catch(e) { console.warn('getAllData failed:', e); return []; }
+    }
+
+    // ── Tab Switching ──
+    function switchTab(tab) {
+      ['request','answer','inquiry'].forEach(t => {
+        document.getElementById('tabBtn'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active', t===tab);
+        document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active', t===tab);
+        document.getElementById('sidebar'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active', t===tab);
+      });
+      if (tab === 'inquiry') loadInquiryList();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    function showView(id) {
+      document.querySelectorAll('#tabRequest .view').forEach(v => v.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+    function updateSteps(c) {
+      const s = {stepWrite:'',stepReview:'',stepDone:''};
+      if(c==='write') s.stepWrite='active';
+      else if(c==='review'){s.stepWrite='done';s.stepReview='active';}
+      else if(c==='done'){s.stepWrite='done';s.stepReview='done';s.stepDone='active';}
+      Object.entries(s).forEach(([id,cls])=>{
+        const el=document.getElementById(id); el.classList.remove('active','done'); if(cls)el.classList.add(cls);
+      });
+    }
+
+    // ── Autocomplete (Request) ──
+    function handleNameInput(val) {
+      selectedEmployee = null;
+      const d=document.getElementById('requesterDept'),e2=document.getElementById('requesterEmail');
+      d.removeAttribute('readonly');e2.removeAttribute('readonly');
+      d.placeholder='부서명 입력';e2.placeholder='이메일 입력';
+      const list=document.getElementById('autocompleteList');
+      if(!val.trim()){d.value='';e2.value='';list.classList.remove('show');return;}
+      // 직원 목록 아직 로드 전이면 로드 후 재시도
+      if(!_employeesLoaded){
+        list.innerHTML='<div class="autocomplete-item"><span class="meta">직원 목록 로딩 중...</span></div>';
+        list.classList.add('show');
+        loadEmployees().then(()=>handleNameInput(val));
+        return;
+      }
+      filteredList=employees.filter(e=>e.name.includes(val));
+      autocompleteIndex=-1;
+      if(!filteredList.length){list.classList.remove('show');return;}
+      list.innerHTML=filteredList.map((emp,i)=>`<div class="autocomplete-item" onmousedown="selectEmployee(${i})" onmouseover="setActiveIndex(${i})"><span class="name">${emp.name}</span><span class="meta">${emp.dept} · ${emp.email}</span></div>`).join('');
+      list.classList.add('show');
+    }
+    function setActiveIndex(i){autocompleteIndex=i;document.querySelectorAll('#autocompleteList .autocomplete-item').forEach((el,idx)=>el.classList.toggle('active',idx===i));}
+    function handleKeyDown(e){
+      const list=document.getElementById('autocompleteList');
+      if(!list.classList.contains('show'))return;
+      if(e.key==='ArrowDown'){e.preventDefault();setActiveIndex(Math.min(autocompleteIndex+1,filteredList.length-1));}
+      if(e.key==='ArrowUp'){e.preventDefault();setActiveIndex(Math.max(autocompleteIndex-1,0));}
+      if(e.key==='Enter'&&autocompleteIndex>=0){e.preventDefault();selectEmployee(autocompleteIndex);}
+      if(e.key==='Escape')list.classList.remove('show');
+    }
+    function selectEmployee(i){
+      const emp=filteredList[i];selectedEmployee=emp;
+      document.getElementById('requesterName').value=emp.name;
+      const d=document.getElementById('requesterDept'),e2=document.getElementById('requesterEmail');
+      d.value=emp.dept;e2.value=emp.email;d.setAttribute('readonly',true);e2.removeAttribute('readonly');
+      document.getElementById('autocompleteList').classList.remove('show');
+    }
+    document.addEventListener('click',e=>{
+      if(!e.target.closest('.autocomplete-wrap')){
+        document.getElementById('autocompleteList').classList.remove('show');
+        document.getElementById('answerAutocompleteList').classList.remove('show');
+      }
+    });
+
+    // ── Autocomplete (Answer) ──
+    function handleAnswerNameInput(val){
+      answerSelectedEmployee=null;
+      const e2=document.getElementById('answerHandlerEmail');e2.removeAttribute('readonly');e2.placeholder='이메일 입력';
+      const list=document.getElementById('answerAutocompleteList');
+      if(!val.trim()){e2.value='';list.classList.remove('show');return;}
+      // 직원 목록 아직 로드 전이면 로드 후 재시도
+      if(!_employeesLoaded){
+        list.innerHTML='<div class="autocomplete-item"><span class="meta">직원 목록 로딩 중...</span></div>';
+        list.classList.add('show');
+        loadEmployees().then(()=>handleAnswerNameInput(val));
+        return;
+      }
+      answerFilteredList=employees.filter(e=>e.name.includes(val));answerAutocompleteIndex=-1;
+      if(!answerFilteredList.length){list.classList.remove('show');return;}
+      list.innerHTML=answerFilteredList.map((emp,i)=>`<div class="autocomplete-item" onmousedown="selectAnswerEmployee(${i})" onmouseover="setAnswerActiveIndex(${i})"><span class="name">${emp.name}</span><span class="meta">${emp.dept} · ${emp.email}</span></div>`).join('');
+      list.classList.add('show');
+    }
+    function setAnswerActiveIndex(i){answerAutocompleteIndex=i;document.querySelectorAll('#answerAutocompleteList .autocomplete-item').forEach((el,idx)=>el.classList.toggle('active',idx===i));}
+    function handleAnswerKeyDown(e){
+      const list=document.getElementById('answerAutocompleteList');
+      if(!list.classList.contains('show'))return;
+      if(e.key==='ArrowDown'){e.preventDefault();setAnswerActiveIndex(Math.min(answerAutocompleteIndex+1,answerFilteredList.length-1));}
+      if(e.key==='ArrowUp'){e.preventDefault();setAnswerActiveIndex(Math.max(answerAutocompleteIndex-1,0));}
+      if(e.key==='Enter'&&answerAutocompleteIndex>=0){e.preventDefault();selectAnswerEmployee(answerAutocompleteIndex);}
+      if(e.key==='Escape')list.classList.remove('show');
+    }
+    function selectAnswerEmployee(i){
+      const emp=answerFilteredList[i];answerSelectedEmployee=emp;
+      document.getElementById('answerHandler').value=emp.name;
+      document.getElementById('answerHandlerEmail').value=emp.email;
+      document.getElementById('answerAutocompleteList').classList.remove('show');
+    }
+
+    // ── Multi-select ──
+    function handleCustomerChange(){const s=document.getElementById('customerSelect'),c=document.getElementById('customerCustom');Array.from(s.selectedOptions).some(o=>o.value==='기타')?(c.classList.remove('hidden'),c.focus()):(c.classList.add('hidden'),c.value='');}
+    function handleLocationChange(){const s=document.getElementById('locationSelect'),c=document.getElementById('locationCustom');Array.from(s.selectedOptions).some(o=>o.value==='기타')?(c.classList.remove('hidden'),c.focus()):(c.classList.add('hidden'),c.value='');}
+    function handleLineChange(){const s=document.getElementById('lineSelect'),c=document.getElementById('lineCustom');Array.from(s.selectedOptions).some(o=>o.value==='기타')?(c.classList.remove('hidden'),c.focus()):(c.classList.add('hidden'),c.value='');}
+    function handleProductGroupChange(v){const c=document.getElementById('productGroupCustom');v==='기타'?(c.classList.remove('hidden'),c.focus()):(c.classList.add('hidden'),c.value='');}
+    function handleCategoryChange(v){const c=document.getElementById('categoryCustom');v==='기타'?(c.classList.remove('hidden'),c.focus()):(c.classList.add('hidden'),c.value='');}
+
+    // ── 체크박스 / 선택 삭제 ──
+    function toggleCheckAll(chk) {
+      document.querySelectorAll('.row-check').forEach(c => c.checked = chk.checked);
+      onRowCheckChange();
+    }
+    function onRowCheckChange() {
+      const anyChecked = document.querySelectorAll('.row-check:checked').length > 0;
+      document.getElementById('deleteSelectedBtn').style.display = anyChecked ? '' : 'none';
+      const all = document.querySelectorAll('.row-check');
+      const checked = document.querySelectorAll('.row-check:checked');
+      document.getElementById('checkAll').indeterminate = checked.length > 0 && checked.length < all.length;
+      document.getElementById('checkAll').checked = all.length > 0 && checked.length === all.length;
+    }
+    async function deleteSelectedRows() {
+      const checked = [...document.querySelectorAll('.row-check:checked')].map(c => c.value).filter(Boolean);
+      if (!checked.length) return;
+      if (!confirm(`선택한 ${checked.length}건을 삭제하시겠습니까?\n삭제된 데이터는 Google Sheet에서도 제거됩니다.`)) return;
+      showToast('삭제 중...');
+      let failCount = 0;
+      for (const reqNo of checked) {
+        try {
+          await fetch(GAS_WEB_APP_URL, {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'deleteByNo', data: { requestNo: reqNo } })
+          });
+        } catch(e) { failCount++; }
+      }
+      // 로컬 캐시에서도 제거
+      allInquiryData = allInquiryData.filter(d => !checked.includes(d.requestNo));
+      document.getElementById('deleteSelectedBtn').style.display = 'none';
+      document.getElementById('checkAll').checked = false;
+      renderInquiryTable(sortRequestsNewestFirst(allInquiryData));
+      document.getElementById('inquiryListStatus').innerHTML = `<span style="color:var(--success);font-weight:700;">총 ${allInquiryData.length}건</span>`;
+      showToast(failCount ? `삭제 완료 (${failCount}건 오류)` : `${checked.length}건 삭제 완료`);
+    }
+    function getMultiSelectValue(sId,cId){
+      const s=document.getElementById(sId),vals=Array.from(s.selectedOptions).map(o=>o.value).filter(v=>v!=='기타');
+      if(Array.from(s.selectedOptions).some(o=>o.value==='기타')){const cv=document.getElementById(cId).value.trim();if(cv)vals.push(cv);}
+      return vals.join(', ');
+    }
+    function getValue(sId,cId){const s=document.getElementById(sId);if(s.multiple)return getMultiSelectValue(sId,cId);return s.value==='기타'?(document.getElementById(cId).value||'기타'):s.value;}
+
+    // ══════════════════════════════════════════════════════════════
+    // ▼▼▼ 부서 목록 데이터 (담당파트 드롭다운용) ▼▼▼
+    // ══════════════════════════════════════════════════════════════
+    function initDeptDropdown() {
+      // 직원 목록은 loadEmployees()가 페이지 로드 시 자동으로 불러옴.
+      // 로드 완료 시 populateDeptSelect도 자동 갱신됨.
+      // GAS에서 별도 부서 목록도 병행 조회 (직원 로드 실패 대비 fallback)
+      fetch(GAS_WEB_APP_URL + '?action=getDeptList')
+        .then(res => res.json())
+        .then(json => { if (json.success && json.data) updateDeptList(json.data); })
+        .catch(() => {});
+    }
+    function updateDeptList(newDeptArray) {
+      if (!Array.isArray(newDeptArray)) return;
+      const uniqueSorted = [...new Set(newDeptArray)].sort();
+      deptList = uniqueSorted;
+      populateDeptSelect('answerPart', uniqueSorted);
+    }
+    function populateDeptSelect(selectId, depts) {
+      const select = document.getElementById(selectId);
+      if (!select) return;
+      select.innerHTML = '<option value="">선택하세요</option>';
+      depts.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d; opt.textContent = d;
+        select.appendChild(opt);
+      });
+    }
+
+    // ── 담당파트 변경 (onPartChange) ──
+    function onPartChange(val) {
+      const progressSelect = document.getElementById('answerProgress');
+      // '담당부서 지정' 옵션 관리
+      let hasDelegateOpt = false;
+      for (let opt of progressSelect.options) {
+        if (opt.value === '담당부서 지정') { hasDelegateOpt = true; break; }
+      }
+      if (!hasDelegateOpt) {
+        const o = document.createElement('option');
+        o.value = '담당부서 지정'; o.textContent = '담당부서 지정';
+        progressSelect.appendChild(o);
+      }
+      // 담당파트 변경 시 처리담당자/이메일 항상 초기화 후 자동완성
+      const handlerInput = document.getElementById('answerHandler');
+      const emailInput   = document.getElementById('answerHandlerEmail');
+      if (!val) { handlerInput.value = ''; emailInput.value = ''; return; }
+      handlerInput.value = ''; emailInput.value = '';
+      emailInput.placeholder = '팀장 이메일 조회 중...';
+      fetch(`${GAS_WEB_APP_URL}?action=getTeamLeader&dept=${encodeURIComponent(val)}`)
+        .then(res => res.json())
+        .then(json => {
+          if (json && json.success && json.data) {
+            handlerInput.value = json.data.name  || '';
+            emailInput.value   = json.data.email || '';
+          }
+          emailInput.placeholder = '이름 선택 시 자동완성';
+        }).catch(() => { emailInput.placeholder = '이메일 직접 입력'; });
+    }
+
+    function insertPartTemplate() {
+      // 제한 없이 항상 사용 가능 — 추가 담당부서 포함해서 템플릿 생성
+      const extras = collectExtraHandlers();
+      const allParts = extras
+        .filter(p => p.part)
+        .map(e => ({ part: e.part, handler: e.handler }));
+      if (allParts.length === 0) { showToast('추가 담당부서를 먼저 입력하세요.'); return; }
+      const greetings = allParts.map(p =>
+        `<p>• <b>${p.part}</b>${p.handler ? ` (담당: ${p.handler})` : ''} 팀장님</p>`
+      ).join('');
+      const template = `<p>안녕하세요.</p><p>아래 부서 팀장님께 기술 문의 건 검토 및 회신을 요청드립니다.</p>${greetings}<br><p>개발혁신팀으로 접수된 기술 문의 건 중 귀 팀 검토가 필요한 사항이 있어 전달드립니다.<br>확인 후 검토 및 답변 부탁드립니다.</p><br><p>감사합니다.</p>`;
+      document.getElementById('answerContentEditor').innerHTML = template;
+      document.getElementById('answerContentEditor').focus();
+      showToast(`담당자 지정 요청 템플릿 (${allParts.length}개 부서) 입력 완료`);
+    }
+
+    function handleProgressChange(val) {
+      const mark = document.getElementById('reasonRequiredMark');
+      const reasonField = document.getElementById('answerReasonField');
+      if (val === '미진행' || val === 'Hold') { mark.style.display = 'inline'; reasonField.style.display = ''; }
+      else { mark.style.display = 'none'; reasonField.style.display = 'none'; }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // ▼ 4. 추가 담당부서 행 관리 (최대 2개 추가 = 총 3명)
+    // ══════════════════════════════════════════════════════════
+    function addExtraHandler() {
+      if (extraHandlerCount >= MAX_EXTRA_HANDLERS) { showToast('추가 담당부서는 최대 3개까지 추가할 수 있습니다.'); return; }
+      extraHandlerCount++;
+      const idx = extraHandlerCount + 1; // 2 or 3
+      const container = document.getElementById('extraHandlerContainer');
+      const row = document.createElement('div');
+      row.className = 'extra-handler-row';
+      row.id = `extraRow${idx}`;
+      row.innerHTML = `
+        <div class="field">
+          <label>담당파트 ${idx}</label>
+          <select id="answerPart${idx}" onchange="onExtraPartChange(${idx},this.value)">
+            <option value="">선택하세요</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>처리담당자 ${idx}</label>
+          <input type="text" id="answerHandler${idx}" placeholder="담당자명">
+        </div>
+        <div class="field">
+          <label>담당자 이메일 ${idx}</label>
+          <input type="text" id="answerHandlerEmail${idx}" placeholder="이메일">
+        </div>
+        <button type="button" class="btn btn-danger btn-sm" onclick="removeExtraHandler(${idx})" title="삭제">✕</button>
+      `;
+      container.appendChild(row);
+      populateDeptSelect(`answerPart${idx}`, deptList);
+      if (extraHandlerCount >= MAX_EXTRA_HANDLERS) document.getElementById('addHandlerBtn').disabled = true;
+      document.getElementById('multiDeptProgressHint').classList.remove('hidden');
+    }
+
+    function removeExtraHandler(idx) {
+      const row = document.getElementById(`extraRow${idx}`);
+      if (row) row.remove();
+      extraHandlerCount--;
+      document.getElementById('addHandlerBtn').disabled = false;
+      if (extraHandlerCount === 0) document.getElementById('multiDeptProgressHint').classList.add('hidden');
+    }
+
+    function onExtraPartChange(idx, val) {
+      const handlerInput = document.getElementById(`answerHandler${idx}`);
+      const emailInput   = document.getElementById(`answerHandlerEmail${idx}`);
+      // 선택 해제 시 초기화
+      if (!val) { handlerInput.value = ''; emailInput.value = ''; emailInput.placeholder = '이메일'; return; }
+      // 개발혁신팀도 팀장 조회 (변경 시 항상 덮어쓰기)
+      emailInput.placeholder = '팀장 이메일 조회 중...';
+      handlerInput.value = ''; emailInput.value = '';
+      fetch(`${GAS_WEB_APP_URL}?action=getTeamLeader&dept=${encodeURIComponent(val)}`)
+        .then(res => res.json())
+        .then(json => {
+          if (json && json.success && json.data) {
+            handlerInput.value = json.data.name  || '';
+            emailInput.value   = json.data.email || '';
+          }
+          emailInput.placeholder = '이메일';
+        }).catch(() => { emailInput.placeholder = '이메일 직접 입력'; });
+    }
+
+    function collectExtraHandlers() {
+      const extras = [];
+      for (let idx = 2; idx <= 2 + MAX_EXTRA_HANDLERS; idx++) {
+        const row = document.getElementById(`extraRow${idx}`);
+        if (!row) continue;
+        const part = (document.getElementById(`answerPart${idx}`) || {}).value || '';
+        const handler = (document.getElementById(`answerHandler${idx}`) || {}).value || '';
+        const email = (document.getElementById(`answerHandlerEmail${idx}`) || {}).value || '';
+        if (part || handler || email) extras.push({ part, handler, email, index: idx });
+      }
+      return extras;
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // ▼ 2. 첨부파일 관리 (UI 전용, 구글 시트에는 저장 안 함)
+    // ══════════════════════════════════════════════════════════
+
+
+
+    // ── Form ──
+    function collectFormData(){
+      const requesterName = document.getElementById('requesterName').value.trim();
+      const requestContent = getRequestEditorPlainText();
+      return {
+        requestNo: submittedInfo?.requestNo||generateRequestNo(),
+        requesterName, requester: requesterName,
+        requesterDept: document.getElementById('requesterDept').value.trim(),
+        requesterEmail: document.getElementById('requesterEmail').value.trim(),
+        requestDate: document.getElementById('requestDate').value,
+        customer: getValue('customerSelect','customerCustom'),
+        location: getValue('locationSelect','locationCustom'),
+        line: getValue('lineSelect','lineCustom'),
+        equipmentName: document.getElementById('equipmentName').value.trim(),
+        productGroup: getValue('productGroupSelect','productGroupCustom'),
+        category: getValue('categorySelect','categoryCustom'),
+        docType: document.getElementById('docType').value,
+        dueDate: document.getElementById('dueDate').value,
+        content: requestContent,
+        requestContent,
+        requestContentHTML: getRequestEditorHTML()
+      };
+    }
+
+    function validateForm(){
+      const form=document.getElementById('requestForm');if(!form.reportValidity())return false;
+      const cat=getValue('categorySelect','categoryCustom'),cust=getValue('customerSelect','customerCustom'),loc=getValue('locationSelect','locationCustom');
+      if(!cat||!cust){showToast('필수 항목을 입력해주세요.');return false;}
+      if(!loc){showToast('LOCATION을 선택해주세요.');return false;}
+      const reqContent = getRequestEditorPlainText().trim();
+      if(!reqContent){showToast('요청내용을 입력해주세요.');return false;}
+      if(document.getElementById('categorySelect').value==='기타'&&!document.getElementById('categoryCustom').value.trim()){showToast('분류 기타 항목을 입력해주세요.');return false;}
+      return true;
+    }
+
+    function renderSummary(targetId,data){
+      const items=[
+        ['접수번호',data.requestNo],['요청자명',data.requesterName],
+        ['요청부서',data.requesterDept||'-'],['요청자 이메일',data.requesterEmail||'-'],
+        ['요청일자',data.requestDate],['고객사',data.customer||'-'],
+        ['LOCATION',data.location||'-'],['LINE',data.line||'-'],
+        ['장비명',data.equipmentName||'-'],
+        ['제품군',data.productGroup||'-'],
+        ['분류',data.category||'-'],['문서형식',data.docType||'-'],
+        ['납기일',data.dueDate||'-'],
+        ['요청내용',data.requestContentHTML||data.requestContent||'-',true]
+      ];
+      document.getElementById(targetId).innerHTML=items.map(([l,v,f])=>`<div class="summary-item ${f?'full':''}"><div class="label">${l}</div><div class="value">${f && v !== '-' ? v : escapeHtml(v)}</div></div>`).join('');
+    }
+
+    function goPreview(){
+      if(!validateForm())return;
+      formSnapshot=collectFormData();
+      renderSummary('previewSummary',formSnapshot);showView('previewView');updateSteps('review');
+      showToast('입력한 내용을 검토 화면에 표시했습니다.');
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+    function backToEdit(){showView('editView');updateSteps('write');window.scrollTo({top:0,behavior:'smooth'});}
+
+    // ▼ 1. 제출 시 납기일 리마인드 정보도 함께 GAS에 전송
+    async function finalSubmit(){
+      if(!formSnapshot)formSnapshot=collectFormData();
+      const btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='접수 중...';
+      try{await fetch(GAS_WEB_APP_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        action:'submit',
+        data:formSnapshot,
+        reminder: { dueDate: formSnapshot.dueDate, requesterEmail: formSnapshot.requesterEmail }
+      })});}catch(e){}
+
+      submittedInfo={requestNo:formSnapshot.requestNo,submittedAt:formatDateTime(new Date())};
+      document.getElementById('submittedNo').textContent=`접수번호 ${submittedInfo.requestNo}`;
+      document.getElementById('submittedAt').textContent=`제출시각 ${submittedInfo.submittedAt}`;
+      renderSummary('submittedSummary',formSnapshot);showView('submittedView');updateSteps('done');
+      showToast(`접수 완료! ${submittedInfo.requestNo}`);
+      window.scrollTo({top:0,behavior:'smooth'});
+      btn.disabled=false;btn.textContent='최종 제출';
+    }
+
+    function resetFormData(){
+      document.getElementById('requestForm').reset();
+      document.getElementById('requestDate').value=formatDate(today);
+      document.getElementById('dueDate').min=formatDateForInput(today);
+      ['customerCustom','locationCustom','lineCustom','categoryCustom','productGroupCustom'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+      document.getElementById('requesterDept').value='';
+      document.getElementById('requesterEmail').value='';
+      document.getElementById('requesterDept').setAttribute('readonly',true);
+      document.getElementById('requesterEmail').removeAttribute('readonly');
+      document.getElementById('equipmentName').value='';
+      selectedEmployee=null;formSnapshot=null;submittedInfo=null;
+      document.getElementById('requestContentEditor').innerHTML='';
+
+      updateSteps('write');showView('editView');showToast('폼을 초기화했습니다.');
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    // ── Rich Text Editor (Request) ──
+    function reqEditorCmd(cmd) { document.getElementById('requestContentEditor').focus(); document.execCommand(cmd, false, null); }
+    function reqEditorFontSize(size) { document.getElementById('requestContentEditor').focus(); document.execCommand('fontSize', false, size); }
+    function getRequestEditorHTML() { return document.getElementById('requestContentEditor').innerHTML; }
+    function getRequestEditorPlainText() { return stripHtmlTags(getRequestEditorHTML()); }
+    function insertRequestImages(files) {
+      for (const f of files) {
+        const r = new FileReader();
+        r.onload = e => { document.getElementById('requestContentEditor').focus(); document.execCommand('insertHTML', false, `<img src="${e.target.result}" style="max-width:100%;">`); };
+        r.readAsDataURL(f);
+      }
+    }
+
+    // ── Rich Text Editor (Answer) ──
+    function editorCmd(cmd) { document.getElementById('answerContentEditor').focus(); document.execCommand(cmd, false, null); }
+    function editorFontSize(size) { document.getElementById('answerContentEditor').focus(); document.execCommand('fontSize', false, size); }
+    function getEditorHTML() { return document.getElementById('answerContentEditor').innerHTML; }
+    function getEditorPlainText() { return stripHtmlTags(getEditorHTML()); }
+    function insertImages(files) {
+      for (const f of files) {
+        const r = new FileReader();
+        r.onload = e => { document.getElementById('answerContentEditor').focus(); document.execCommand('insertHTML', false, `<img src="${e.target.result}" style="max-width:100%;">`); };
+        r.readAsDataURL(f);
+      }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // TAB 2: 답변 등록
+    // ══════════════════════════════════════════════════════════
+    let currentAnswerData = null;
+    let requesterRequestsList = [];
+
+    async function searchRequesterRequests(keyword) {
+      keyword = (keyword || '').trim();
+      if (!keyword) { showToast('요청자 이름을 입력하세요.'); return; }
+      const statusEl = document.getElementById('answerRequesterStatus');
+      const searchedByRequestNo = isRequestNoKeyword(keyword);
+      statusEl.innerHTML = '<span class="loading-spinner"></span> 검색 중...';
+      document.getElementById('answerReqNoSelectWrap').classList.add('hidden');
+      document.getElementById('answerQuestionSection').classList.add('hidden');
+      document.getElementById('answerSearchStatus').innerHTML = '';
+
+      if (searchedByRequestNo) {
+        const hit = await lookupByNo(keyword);
+        requesterRequestsList = hit ? [hit] : [];
+      } else {
+        let allData = [];
+        try { allData = await getAllData(); } catch(e) { allData = []; }
+        if (!Array.isArray(allData)) allData = [];
+        requesterRequestsList = sortRequestsNewestFirst(
+          allData.filter(d => {
+            if (!d) return false;
+            const name = String(d.requesterName || d.requester || '').trim();
+            const email = String(d.requesterEmail || '').trim();
+            const kw = keyword.trim();
+            return name.includes(kw) || email.includes(kw);
+          })
+        );
+      }
+
+      if (!requesterRequestsList.length) {
+        statusEl.innerHTML = searchedByRequestNo
+          ? '<span style="color:var(--danger);font-weight:700;">❌ 해당 접수번호의 요청 내역이 없습니다.</span>'
+          : '<span style="color:var(--danger);font-weight:700;">❌ 해당 이름의 요청 내역이 없습니다.</span>';
+        return;
+      }
+
+      statusEl.innerHTML = `<span style="color:var(--success);font-weight:700;">✓ ${requesterRequestsList.length}건을 찾았습니다.</span>`;
+      const select = document.getElementById('answerReqNoSelect');
+      select.innerHTML = '<option value="">접수번호를 선택하세요</option>';
+      requesterRequestsList.slice(0, 50).forEach(d => {
+        const prog = d.progress || ((d.answer && d.answer.trim() && d.answer !== '<br>') ? '완료' : '미답변');
+        const opt = document.createElement('option');
+        opt.value = d.requestNo;
+        opt.textContent = `${d.requestNo} | ${d.customer||'-'} | ${progressIcon(prog)} ${prog} | ${d.requestDate||'-'}`;
+        select.appendChild(opt);
+      });
+      if (requesterRequestsList.length > 50) statusEl.innerHTML += ` <span style="color:var(--text-muted);font-size:12px;">(최근 50건만 표시)</span>`;
+      document.getElementById('answerReqNoSelectWrap').classList.remove('hidden');
+    }
+
+    async function loadSelectedRequest(reqNo) {
+      if (!reqNo) { document.getElementById('answerQuestionSection').classList.add('hidden'); document.getElementById('answerSearchStatus').innerHTML=''; return; }
+      const statusEl = document.getElementById('answerSearchStatus');
+      statusEl.innerHTML = '<span class="loading-spinner"></span> 불러오는 중...';
+      let data = requesterRequestsList.find(d => d.requestNo === reqNo) || null;
+      if (!data) data = await lookupByNo(reqNo);
+
+      if (data) {
+        currentAnswerData = data;
+        statusEl.innerHTML = `<span style="color:var(--success);font-weight:700;">✓ ${reqNo} 데이터를 불러왔습니다.</span>`;
+        // 답변 작성란 초기화
+        document.getElementById('answerHandler').value = '';
+        document.getElementById('answerHandlerEmail').value = '';
+        document.getElementById('answerPart').value = '개발혁신팀';
+        document.getElementById('answerProgress').value = '완료';
+        // 개발혁신팀 팀장 정보 자동완성
+        fetch(`${GAS_WEB_APP_URL}?action=getTeamLeader&dept=${encodeURIComponent('개발혁신팀')}`)
+          .then(res => res.json())
+          .then(json => {
+            if (json && json.success && json.data) {
+              document.getElementById('answerHandler').value      = json.data.name  || '';
+              document.getElementById('answerHandlerEmail').value = json.data.email || '';
+            }
+          }).catch(() => {});
+        document.getElementById('answerManday').value = '';
+        document.getElementById('answerReason').value = '';
+        document.getElementById('answerReasonField').style.display = 'none';
+        document.getElementById('answerContentEditor').innerHTML = '';
+        document.getElementById('answerFilePath').value = '';
+        document.getElementById('answerFileName').value = '';
+        document.getElementById('partWarning').classList.add('hidden');
+
+        // 추가 핸들러 행 제거
+        document.getElementById('extraHandlerContainer').innerHTML = '';
+        extraHandlerCount = 0;
+        document.getElementById('addHandlerBtn').disabled = false;
+        answerSelectedEmployee = null;
+
+        renderAnswerQuestion(data);
+        renderExistingAnswers(data);
+        document.getElementById('answerQuestionSection').classList.remove('hidden');
+        document.getElementById('answerDoneSection').classList.add('hidden');
+      } else {
+        statusEl.innerHTML = `<span style="color:var(--danger);font-weight:700;">❌ 데이터를 불러올 수 없습니다.</span>`;
+        document.getElementById('answerQuestionSection').classList.add('hidden');
+      }
+    }
+
+    function renderAnswerQuestion(data) {
+      document.getElementById('answerReqNo').textContent = `접수번호: ${data.requestNo || '-'}`;
+      const badge = document.getElementById('answerStatusBadge');
+      const hasAnswer = !!(data.answer && data.answer.trim() && data.answer !== '<br>');
+      const hasAnswers = Array.isArray(data.answers) && data.answers.length > 0;
+      if (hasAnswer || hasAnswers) { badge.textContent='답변 완료'; badge.className='badge badge-success'; }
+      else { badge.textContent='미답변'; badge.className='badge badge-warning'; }
+
+      const items = [
+        ['고객사',data.customer||'-'],['LOCATION',data.location||'-'],
+        ['LINE',data.line||'-'],['장비명',data.equipmentName||'-'],
+        ['요청일자',data.requestDate||'-'],['요청부서',data.requesterDept||'-'],
+        ['요청담당자',data.requester||'-'],['분류',data.category||'-'],
+        ['납기일',data.dueDate||'-'],
+        ['요청내용',data.content||'-',true,'nl']
+      ];
+      document.getElementById('answerQuestionSummary').innerHTML=items.map(([l,v,f,nl])=>`<div class="summary-item ${f?'full':''}"><div class="label">${l}</div><div class="value">${nl?escapeHtmlNl(v):escapeHtml(v)}</div></div>`).join('');
+
+
+      // 버튼 텍스트
+      const btn = document.getElementById('answerSubmitBtn');
+      if (hasAnswer || hasAnswers) { btn.textContent = '답변 추가'; btn.className = 'btn btn-edit'; }
+      else { btn.textContent = '답변 제출'; btn.className = 'btn btn-success'; }
+    }
+
+    // ▼ 6. 기존 답변 스레드 (댓글형 누적 표시)
+    function renderExistingAnswers(data) {
+      const section = document.getElementById('existingAnswersSection');
+      const thread = document.getElementById('existingAnswersThread');
+      const countBadge = document.getElementById('existingAnswerCount');
+
+      // answers 배열이 있으면 사용, 없으면 단일 답변을 배열로
+      let answers = [];
+      if (Array.isArray(data.answers) && data.answers.length > 0) {
+        answers = data.answers;
+      } else if (data.answer && data.answer.trim() && data.answer !== '<br>') {
+        answers = [{
+          handler: data.handler || '-',
+          part: data.part || '-',
+          progress: data.progress || '-',
+          manday: data.manday || '-',
+          replyDate: data.replyDate || '-',
+          answer: data.answer
+        }];
+      }
+
+      if (answers.length === 0) {
+        section.classList.add('hidden');
+        return;
+      }
+
+      countBadge.textContent = `${answers.length}건`;
+      const progColorMap3 = {
+        '완료':   'background:var(--success-soft);color:var(--success);',
+        '진행중': 'background:#eaf2fb;color:var(--primary);',
+        'Hold':   'background:var(--warning-soft);color:var(--warning);',
+        '미진행': 'background:#fde8e8;color:var(--danger);',
+      };
+      thread.innerHTML = answers.map((a) => {
+        const prog = a.progress || '-';
+        const progStyle = progColorMap3[prog] || 'background:#f3f4f6;color:#6b7280;';
+        const ansContent = (a.answer && a.answer.trim() && a.answer !== '<br>')
+          ? a.answer : '<span style="color:var(--text-muted);font-style:italic;">답변 내용 없음</span>';
+        return `<div class="reply-card">
+          <div class="reply-card-header">
+            <span class="rc-who">💬 ${escapeHtml(a.handler||'-')}</span>
+            <span class="rc-part">(${escapeHtml(a.part||'-')})</span>
+            <span class="rc-prog" style="${progStyle}">${progressIcon(prog)} ${escapeHtml(prog)}</span>
+            <span class="rc-date">📅 ${escapeHtml(a.replyDate||'-')}</span>
+          </div>
+          <div class="reply-card-content">${ansContent}</div>
+        </div>`;
+      }).join('');
+      section.classList.remove('hidden');
+    }
+
+    // ▼ 5. 답변 제출 (모든 담당자에게 메일 발송)
+    async function submitAnswer() {
+      const handler = document.getElementById('answerHandler').value.trim();
+      const editor = document.getElementById('answerContentEditor');
+      const content = editor.innerHTML.trim();
+      const progress = document.getElementById('answerProgress').value;
+      const reason = document.getElementById('answerReason').value.trim();
+
+      if (!handler) { showToast('처리담당자를 입력하세요.'); return; }
+      if (!content || content === '<br>') { showToast('답변내용을 입력하세요.'); return; }
+      if ((progress === '미진행' || progress === 'Hold') && !reason) {
+        showToast('미진행 또는 Hold 사유를 입력하세요.');
+        document.getElementById('answerReason').focus(); return;
+      }
+
+      const btn = document.getElementById('answerSubmitBtn');
+      const originalText = btn.textContent;
+      btn.disabled=true; btn.textContent='제출 중...';
+
+      const reqNo = currentAnswerData?.requestNo || document.getElementById('answerReqNoSelect').value;
+      const extras = collectExtraHandlers();
+
+      // 답변 텍스트만 추출 (백엔드 저장용)
+      const answerPlainText = stripHtmlTags(content);
+
+      const myPart = document.getElementById('answerPart').value.trim();
+      const answerData = {
+        action: 'answer',
+        data: {
+          requestNo: reqNo,
+          handler, handlerEmail: document.getElementById('answerHandlerEmail').value.trim(),
+          part: myPart,
+          replyDate: formatDate(new Date()),
+          manday: document.getElementById('answerManday').value,
+          progress, reason,
+          filePath: document.getElementById('answerFilePath').value.trim(),
+          fileName: document.getElementById('answerFileName').value.trim(),
+          answer: answerPlainText,
+          answerHTML: content,
+          // 추가 담당부서 정보 (최대 3개)
+          part2: extras[0]?.part || '', handler2: extras[0]?.handler || '', handlerEmail2: extras[0]?.email || '',
+          part3: extras[1]?.part || '', handler3: extras[1]?.handler || '', handlerEmail3: extras[1]?.email || '',
+          part4: extras[2]?.part || '', handler4: extras[2]?.handler || '', handlerEmail4: extras[2]?.email || '',
+          allHandlerEmails: [
+            document.getElementById('answerHandlerEmail').value.trim(),
+            ...(extras.map(e => e.email).filter(Boolean))
+          ].filter(Boolean)
+        }
+      };
+
+      try{await fetch(GAS_WEB_APP_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(answerData)});}catch(e){}
+
+      const doneNo = reqNo;
+      clearAnswerForm();
+      document.getElementById('answerDoneNo').textContent = `접수번호 ${doneNo}`;
+      document.getElementById('answerDoneAt').textContent = `답변시각 ${formatDateTime(new Date())}`;
+      document.getElementById('answerDoneSection').classList.remove('hidden');
+      showToast(`답변이 등록되었습니다. (${doneNo})`);
+      window.scrollTo({top:0,behavior:'smooth'});
+      btn.disabled=false; btn.textContent=originalText;
+    }
+
+    function clearAnswerForm(){
+      document.getElementById('answerRequesterSearch').value='';
+      document.getElementById('answerReqNoSelectWrap').classList.add('hidden');
+      document.getElementById('answerRequesterStatus').innerHTML='';
+      document.getElementById('answerSearchStatus').innerHTML='';
+      document.getElementById('answerQuestionSection').classList.add('hidden');
+      document.getElementById('answerDoneSection').classList.add('hidden');
+      document.getElementById('existingAnswersSection').classList.add('hidden');
+      ['answerHandler','answerHandlerEmail','answerManday','answerFilePath','answerFileName','answerReason'].forEach(id=>document.getElementById(id).value='');
+      document.getElementById('answerContentEditor').innerHTML='';
+      document.getElementById('answerProgress').value='완료';
+      handleProgressChange('완료');
+      document.getElementById('answerPart').value='개발혁신팀';
+      document.getElementById('partWarning').classList.add('hidden');
+      document.getElementById('answerHandlerEmail').placeholder='이름 선택 시 자동완성';
+      answerSelectedEmployee=null;currentAnswerData=null;
+
+      // 추가 핸들러 행 제거
+      document.getElementById('extraHandlerContainer').innerHTML='';
+      extraHandlerCount=0;
+      document.getElementById('addHandlerBtn').disabled=false;
+      document.getElementById('multiDeptProgressHint').classList.add('hidden');
+      const btn = document.getElementById('answerSubmitBtn');
+      btn.textContent = '답변 제출'; btn.className = 'btn btn-success';
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // TAB 3: 응답 조회 (7. 전체 목록 + 필터)
+    // ══════════════════════════════════════════════════════════
+    async function loadInquiryList() {
+      const statusEl = document.getElementById('inquiryListStatus');
+      statusEl.innerHTML = '<span class="loading-spinner"></span> 전체 데이터 불러오는 중...';
+      document.getElementById('inquiryResultSection').classList.add('hidden');
+
+      try {
+        allInquiryData = await getAllData();
+      } catch(e) {
+        allInquiryData = [];
+      }
+
+      if (!allInquiryData.length) {
+        statusEl.innerHTML = '<span style="color:var(--text-muted);">등록된 요청 내역이 없습니다.</span>';
+        document.getElementById('inquiryTableBody').innerHTML = '';
+        return;
+      }
+
+      statusEl.innerHTML = `<span style="color:var(--success);font-weight:700;">총 ${allInquiryData.length}건</span>`;
+      renderInquiryTable(sortRequestsNewestFirst(allInquiryData));
+    }
+
+    function applyInquiryFilter() {
+      const name = document.getElementById('filterName').value.trim().toLowerCase();
+      const customer = document.getElementById('filterCustomer').value.trim().toLowerCase();
+      const equipment = document.getElementById('filterEquipment').value.trim().toLowerCase();
+      const dateFrom = document.getElementById('filterDateFrom').value;
+      const dateTo = document.getElementById('filterDateTo').value;
+
+      let filtered = allInquiryData.filter(d => {
+        if (name && !String(d.requester||d.requesterName||'').toLowerCase().includes(name)) return false;
+        if (customer && !String(d.customer||'').toLowerCase().includes(customer)) return false;
+        if (equipment && !String(d.equipmentName||'').toLowerCase().includes(equipment)) return false;
+        if (dateFrom && String(d.requestDate||'') < dateFrom) return false;
+        if (dateTo && String(d.requestDate||'') > dateTo) return false;
+        return true;
+      });
+
+      const statusEl = document.getElementById('inquiryListStatus');
+      statusEl.innerHTML = `<span style="color:var(--success);font-weight:700;">필터 결과: ${filtered.length}건</span>`;
+      renderInquiryTable(sortRequestsNewestFirst(filtered));
+    }
+
+    function clearInquiryFilter() {
+      ['filterName','filterCustomer','filterEquipment','filterDateFrom','filterDateTo'].forEach(id => document.getElementById(id).value = '');
+      if (allInquiryData.length) {
+        document.getElementById('inquiryListStatus').innerHTML = `<span style="color:var(--success);font-weight:700;">총 ${allInquiryData.length}건</span>`;
+        renderInquiryTable(sortRequestsNewestFirst(allInquiryData));
+      }
+    }
+
+    function renderInquiryTable(data, resetPage) {
+      _inquiryFiltered = data;
+      if (resetPage !== false) _currentPage = 1;
+      _renderInquiryPage();
+    }
+
+    function _renderInquiryPage() {
+      const data = _inquiryFiltered;
+      const tbody = document.getElementById('inquiryTableBody');
+      const totalPages = Math.max(1, Math.ceil(data.length / PAGE_SIZE));
+      if (_currentPage > totalPages) _currentPage = totalPages;
+
+      if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text-muted);padding:30px;">조건에 맞는 데이터가 없습니다.</td></tr>';
+        document.getElementById('inquiryPagination').innerHTML = '';
+        return;
+      }
+
+      const start = (_currentPage - 1) * PAGE_SIZE;
+      const pageData = data.slice(start, start + PAGE_SIZE);
+
+      tbody.innerHTML = pageData.map(d => {
+        const hasAnswer = !!(d.answer && d.answer.trim() && d.answer !== '<br>') || (Array.isArray(d.answers) && d.answers.length > 0);
+        const prog = d.progress || (hasAnswer ? '완료' : '답변대기');
+        const statusClass = hasAnswer ? 'background:var(--success-soft);color:var(--success);' : 'background:var(--warning-soft);color:var(--warning);';
+        const reqNo = escapeHtml(d.requestNo||'');
+        return `<tr>
+          <td onclick="event.stopPropagation()"><input type="checkbox" class="row-check" value="${reqNo}" onchange="onRowCheckChange()"></td>
+          <td style="font-weight:700;color:var(--primary);cursor:pointer;" onclick="openInquiryDetail('${reqNo}')">${reqNo||'-'}</td>
+          <td onclick="openInquiryDetail('${reqNo}')">${escapeHtml(d.requester||d.requesterName||'-')}</td>
+          <td onclick="openInquiryDetail('${reqNo}')">${escapeHtml(d.requesterDept||'-')}</td>
+          <td onclick="openInquiryDetail('${reqNo}')">${escapeHtml(d.customer||'-')}</td>
+          <td onclick="openInquiryDetail('${reqNo}')">${escapeHtml(d.equipmentName||'-')}</td>
+          <td onclick="openInquiryDetail('${reqNo}')">${escapeHtml(d.category||'-')}</td>
+          <td onclick="openInquiryDetail('${reqNo}')">${escapeHtml(d.requestDate||'-')}</td>
+          <td onclick="openInquiryDetail('${reqNo}')">${escapeHtml(d.dueDate||'-')}</td>
+          <td onclick="openInquiryDetail('${reqNo}')"><span class="status-badge" style="${statusClass}">${progressIcon(prog)} ${escapeHtml(prog)}</span></td>
+        </tr>`;
+      }).join('');
+
+      // 페이지네이션 렌더링
+      const pg = document.getElementById('inquiryPagination');
+      if (totalPages <= 1) { pg.innerHTML = ''; return; }
+
+      let btns = '';
+      btns += `<button onclick="goInquiryPage(${_currentPage-1})" ${_currentPage===1?'disabled':''}>‹</button>`;
+
+      // 현재 페이지 기준 앞뒤 2페이지씩만 표시
+      const delta = 2;
+      let start_p = Math.max(1, _currentPage - delta);
+      let end_p   = Math.min(totalPages, _currentPage + delta);
+      if (start_p > 1) btns += `<button onclick="goInquiryPage(1)">1</button>${start_p>2?'<span class="page-info">…</span>':''}`;
+      for (let p = start_p; p <= end_p; p++) {
+        btns += `<button class="${p===_currentPage?'active':''}" onclick="goInquiryPage(${p})">${p}</button>`;
+      }
+      if (end_p < totalPages) btns += `${end_p<totalPages-1?'<span class="page-info">…</span>':''}<button onclick="goInquiryPage(${totalPages})">${totalPages}</button>`;
+      btns += `<button onclick="goInquiryPage(${_currentPage+1})" ${_currentPage===totalPages?'disabled':''}>›</button>`;
+      btns += `<span class="page-info">${start+1}-${Math.min(start+PAGE_SIZE,data.length)} / 총 ${data.length}건</span>`;
+      pg.innerHTML = btns;
+    }
+
+    function goInquiryPage(page) {
+      const totalPages = Math.ceil(_inquiryFiltered.length / PAGE_SIZE);
+      if (page < 1 || page > totalPages) return;
+      _currentPage = page;
+      _renderInquiryPage();
+      document.getElementById('inquiryTable').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    async function openInquiryDetail(reqNo) {
+      if (!reqNo) return;
+      let data = allInquiryData.find(d => d.requestNo === reqNo) || null;
+      if (!data) data = await lookupByNo(reqNo);
+      if (!data) { showToast('데이터를 불러올 수 없습니다.'); return; }
+      renderInquiryResult(data);
+      document.getElementById('inquiryResultSection').classList.remove('hidden');
+      document.getElementById('inquiryResultSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function closeInquiryDetail() {
+      document.getElementById('inquiryResultSection').classList.add('hidden');
+    }
+
+    function renderInquiryResult(data) {
+      const reqNo = data.requestNo || '-';
+      document.getElementById('inquiryReqNo').textContent = `접수번호: ${reqNo}`;
+      const hasAnswer = !!(data.answer && data.answer.trim() && data.answer !== '<br>');
+      const hasAnswers = Array.isArray(data.answers) && data.answers.some(a => a.answer && a.answer.trim());
+      const badge = document.getElementById('inquiryStatusBadge');
+      badge.textContent = (hasAnswer || hasAnswers) ? '답변 완료' : '답변 대기';
+      badge.className = (hasAnswer || hasAnswers) ? 'badge badge-success' : 'badge badge-warning';
+
+      const thread = document.getElementById('inquiryThread');
+
+      // ── 질문 카드 ──────────────────────────────────────────
+      const qCard = `
+        <div class="detail-card">
+          <div class="detail-card-header">
+            <span class="dc-title">📝 문의내용</span>
+            <span class="dc-badge" style="background:var(--primary-soft);color:var(--primary);">${escapeHtml(data.category||'-')}</span>
+          </div>
+          <div class="detail-meta-grid">
+            <div class="detail-meta-item"><span class="dm-label">등록자</span><span class="dm-value">${escapeHtml(data.requester||'-')}</span></div>
+            <div class="detail-meta-item"><span class="dm-label">요청부서</span><span class="dm-value">${escapeHtml(data.requesterDept||'-')}</span></div>
+            <div class="detail-meta-item"><span class="dm-label">등록일자</span><span class="dm-value">${escapeHtml(data.requestDate||'-')}</span></div>
+            <div class="detail-meta-item"><span class="dm-label">납기일</span><span class="dm-value">${escapeHtml(data.dueDate||'-')}</span></div>
+            <div class="detail-meta-item"><span class="dm-label">고객사</span><span class="dm-value">${escapeHtml(data.customer||'-')}</span></div>
+            <div class="detail-meta-item"><span class="dm-label">LOCATION</span><span class="dm-value">${escapeHtml(data.location||'-')}</span></div>
+          </div>
+          <div class="detail-content">${escapeHtmlNl(data.content || '-')}</div>
+        </div>`;
+
+      thread.innerHTML = qCard;
+
+      // ── 답변 목록 ──────────────────────────────────────────
+      let answers = [];
+      if (hasAnswers) {
+        answers = data.answers;
+      } else if (hasAnswer) {
+        answers = [{
+          handler: data.handler||'-', part: data.part||'-',
+          progress: data.progress||'-',
+          replyDate: data.replyDate||'-', answer: data.answer
+        }];
+      }
+
+      const progColorMap = {
+        '완료':   { bg:'var(--success-soft)', color:'var(--success)' },
+        '진행중': { bg:'#eaf2fb',             color:'var(--primary)' },
+        'Hold':   { bg:'var(--warning-soft)', color:'var(--warning)' },
+        '미진행': { bg:'#fde8e8',             color:'var(--danger)'  },
+      };
+
+      const replySection = document.createElement('div');
+
+      if (answers.length > 0) {
+        const titleHtml = `
+          <div class="reply-section-title">
+            <span class="reply-count-badge">${answers.length}</span>
+            답변내용
+          </div>`;
+
+        const replyCards = answers.map((a) => {
+          const prog = a.progress || '-';
+          const pc = progColorMap[prog] || { bg:'#f3f4f6', color:'#6b7280' };
+          const progBadge = `<span class="rc-prog" style="background:${pc.bg};color:${pc.color};">${progressIcon(prog)} ${escapeHtml(prog)}</span>`;
+          const answerContent = (a.answer && a.answer.trim() && a.answer !== '<br>')
+            ? a.answer
+            : '<span style="color:var(--text-muted);font-style:italic;">답변 내용 없음</span>';
+          return `
+            <div class="reply-card">
+              <div class="reply-card-header">
+                <span class="rc-who">💬 ${escapeHtml(a.handler||'-')}</span>
+                <span class="rc-part">(${escapeHtml(a.part||'-')})</span>
+                ${progBadge}
+                <span class="rc-date">📅 ${escapeHtml(a.replyDate||'-')}</span>
+              </div>
+              <div class="reply-card-content">${answerContent}</div>
+            </div>`;
+        }).join('');
+
+        replySection.innerHTML = titleHtml + replyCards;
+      } else {
+        replySection.innerHTML = `<div class="reply-empty">⏳ 아직 등록된 답변이 없습니다.</div>`;
+      }
+
+      thread.appendChild(replySection);
+    }
+
+    // ── Excel Download (A~V 열 매핑) ──
+    async function downloadExcel() {
+      showToast('전체 데이터를 다운로드 중...');
+      let data = allInquiryData.length ? allInquiryData : [];
+      if (!data.length) {
+        try { data = await getAllData(); } catch(e) { showToast('서버 응답 지연. 잠시 후 다시 시도하세요.'); return; }
+      }
+      if (!data.length) { showToast('다운로드할 데이터가 없습니다.'); return; }
+
+      const headers = [
+        '접수번호','고객사','Location','LINE','장비명','구분(제품군)',
+        '요청일자','요청부서','요청담당자','요청자 이메일','요청내용',
+        '분류','문서형식','납기일',
+        '담당파트','처리담당자','처리담당자 이메일','회신일자','공수(Day)',
+        '진행사항','답변내용','파일 저장 경로','파일명','사유 (미진행, Hold)',
+        '담당파트2','처리담당자2','담당자이메일2','담당파트3','처리담당자3','담당자이메일3'
+      ];
+      const keys = [
+        'requestNo','customer','location','line','equipmentName','productGroup',
+        'requestDate','requesterDept','requester','requesterEmail','content',
+        'category','docType','dueDate',
+        'part','handler','handlerEmail','replyDate','manday',
+        'progress','answer','filePath','fileName','reason',
+        'part2','handler2','handlerEmail2','part3','handler3','handlerEmail3'
+      ];
+
+      let csv = '\uFEFF' + headers.join(',') + '\n';
+      data.forEach(row => {
+        csv += keys.map(k => {
+          let v = row[k] || '';
+          v = String(v).replace(/<[^>]*>/g, '').replace(/"/g, '""');
+          return `"${v}"`;
+        }).join(',') + '\n';
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url;
+      a.download = `유관부서_요청_전체데이터_${formatDate(new Date())}.csv`;
+      a.click(); URL.revokeObjectURL(url);
+      showToast('다운로드 완료!');
+    }
+ </script>
+</body>
+</html>
