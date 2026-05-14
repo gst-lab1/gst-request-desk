@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -462,6 +461,8 @@
       color: var(--text); white-space: pre-wrap; word-break: break-word;
       min-height: 60px;
     }
+    .detail-content img { max-width: 100%; border-radius: 8px; margin: 8px 0; }
+    .summary-item .value img { max-width: 100%; border-radius: 8px; margin: 8px 0; }
     /* 답변 댓글 카드 */
     .reply-card {
       background: white; border: 1px solid var(--line); border-radius: 14px;
@@ -1995,9 +1996,9 @@
         ['요청일자',data.requestDate||'-'],['요청부서',data.requesterDept||'-'],
         ['요청담당자',data.requester||'-'],['분류',data.category||'-'],
         ['납기일',data.dueDate||'-'],
-        ['요청내용',data.content||'-',true,'nl']
+        ['요청내용',data.requestContentHTML||data.content||'-',true,'nl']
       ];
-      document.getElementById('answerQuestionSummary').innerHTML=items.map(([l,v,f,nl])=>`<div class="summary-item ${f?'full':''}"><div class="label">${l}</div><div class="value">${nl?escapeHtmlNl(v):escapeHtml(v)}</div></div>`).join('');
+      document.getElementById('answerQuestionSummary').innerHTML=items.map(([l,v,f,nl])=>`<div class="summary-item ${f?'full':''}"><div class="label">${l}</div><div class="value">${nl?renderSafeHtml(v):escapeHtml(v)}</div></div>`).join('');
 
 
       // 버튼 텍스트
@@ -2308,7 +2309,7 @@
             <div class="detail-meta-item"><span class="dm-label">고객사</span><span class="dm-value">${escapeHtml(data.customer||'-')}</span></div>
             <div class="detail-meta-item"><span class="dm-label">LOCATION</span><span class="dm-value">${escapeHtml(data.location||'-')}</span></div>
           </div>
-          <div class="detail-content">${renderSafeHtml(data.content || '-')}</div>
+          <div class="detail-content">${renderSafeHtml(data.requestContentHTML || data.content || '-')}</div>
         </div>`;
 
       thread.innerHTML = qCard;
