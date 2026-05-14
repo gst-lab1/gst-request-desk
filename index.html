@@ -1794,7 +1794,12 @@
     function insertRequestImages(files) {
       for (const f of files) {
         const r = new FileReader();
-        r.onload = e => { document.getElementById('requestContentEditor').focus(); document.execCommand('insertHTML', false, `<img src="${e.target.result}" style="max-width:100%;">`); };
+        r.onload = async e => {
+          const compressed = await compressImage(e.target.result);
+          document.getElementById('requestContentEditor').focus();
+          document.execCommand('insertHTML', false, `<img src="${compressed}" style="max-width:100%;">`);
+          await replaceBase64ImagesInEditor('requestContentEditor');
+        };
         r.readAsDataURL(f);
       }
     }
@@ -1804,6 +1809,23 @@
     function editorFontSize(size) { document.getElementById('answerContentEditor').focus(); document.execCommand('fontSize', false, size); }
     function getEditorHTML() { return document.getElementById('answerContentEditor').innerHTML; }
     function getEditorPlainText() { return stripHtmlTags(getEditorHTML()); }
+
+    // ── 이미지 압축 (Canvas, 최대 1200px, JPEG 65%) ──
+    async function compressImage(dataUrl, maxWidth = 1200, quality = 0.65) {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => resolve(dataUrl);
+        img.src = dataUrl;
+      });
+    }
 
     // ── 이미지 → Drive 업로드 후 URL 교체 ──
     async function uploadImageToDrive(base64Data, mimeType, fileName) {
@@ -1827,7 +1849,7 @@
       return null;
     }
 
-    // 에디터 내 base64 이미지를 Drive URL로 일괄 교체
+    // 에디터 내 base64 이미지를 압축 후 Drive URL로 일괄 교체
     async function replaceBase64ImagesInEditor(editorId) {
       const editor = document.getElementById(editorId);
       const imgs = editor.querySelectorAll('img[src^="data:"]');
@@ -1835,11 +1857,9 @@
       showToast('이미지 업로드 중...');
       for (const img of imgs) {
         const src = img.getAttribute('src');
-        const mimeMatch = src.match(/^data:([^;]+);/);
-        const mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
-        const ext = mimeType.split('/')[1] || 'png';
-        const url = await uploadImageToDrive(src, mimeType, `paste_${Date.now()}.${ext}`);
-        if (url) img.setAttribute('src', url);
+        const compressed = await compressImage(src);
+        const url = await uploadImageToDrive(compressed, 'image/jpeg', `img_${Date.now()}.jpg`);
+        img.setAttribute('src', url || compressed);
       }
       showToast('이미지 업로드 완료!');
     }
@@ -1848,9 +1868,9 @@
       for (const f of files) {
         const r = new FileReader();
         r.onload = async e => {
+          const compressed = await compressImage(e.target.result);
           document.getElementById('answerContentEditor').focus();
-          document.execCommand('insertHTML', false, `<img src="${e.target.result}" style="max-width:100%;">`);
-          // 파일 선택으로 삽입한 이미지도 Drive로 업로드
+          document.execCommand('insertHTML', false, `<img src="${compressed}" style="max-width:100%;">`);
           await replaceBase64ImagesInEditor('answerContentEditor');
         };
         r.readAsDataURL(f);
