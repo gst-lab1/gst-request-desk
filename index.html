@@ -1695,6 +1695,7 @@
     // ── Form ──
     function collectFormData(){
       const requesterName = document.getElementById('requesterName').value.trim();
+      const requestContentHTML = getRequestEditorHTML();
       const requestContent = getRequestEditorPlainText();
       return {
         requestNo: submittedInfo?.requestNo||generateRequestNo(),
@@ -1710,9 +1711,9 @@
         category: getValue('categorySelect','categoryCustom'),
         docType: document.getElementById('docType').value,
         dueDate: document.getElementById('dueDate').value,
-        content: requestContent,
-        requestContent,
-        requestContentHTML: getRequestEditorHTML()
+        content: requestContentHTML,
+        requestContent: requestContentHTML,
+        requestContentHTML
       };
     }
 
@@ -1741,8 +1742,10 @@
       document.getElementById(targetId).innerHTML=items.map(([l,v,f])=>`<div class="summary-item ${f?'full':''}"><div class="label">${l}</div><div class="value">${f && v !== '-' ? v : escapeHtml(v)}</div></div>`).join('');
     }
 
-    function goPreview(){
+    async function goPreview(){
       if(!validateForm())return;
+      // Drive 업로드 완료 후 스냅샷 (이미지가 base64로 남아있으면 업로드 시도)
+      await replaceBase64ImagesInEditor('requestContentEditor');
       formSnapshot=collectFormData();
       renderSummary('previewSummary',formSnapshot);showView('previewView');updateSteps('review');
       showToast('입력한 내용을 검토 화면에 표시했습니다.');
