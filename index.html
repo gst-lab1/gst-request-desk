@@ -575,7 +575,42 @@
     @media(max-width:900px){ .dash-kpi-row{grid-template-columns:1fr 1fr;} .dash-row{grid-template-columns:1fr;} }
     @media(max-width:500px){ .dash-kpi-row{grid-template-columns:1fr;} }
 
+    /* ── 칸반보드 ── */
+    .kanban-board {
+      display: grid; grid-template-columns: repeat(5, minmax(220px,1fr));
+      gap: 12px; overflow-x: auto; padding-bottom: 8px;
+    }
+    .kanban-col {
+      background: var(--surface-soft); border: 1px solid var(--line);
+      border-radius: 14px; padding: 10px; min-height: 200px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .kanban-col-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 8px; font-size: 13px; font-weight: 800;
+    }
+    .kanban-col-count {
+      background: white; border-radius: 999px; padding: 2px 9px;
+      font-size: 11px; font-weight: 700; color: var(--text-muted);
+      border: 1px solid var(--line);
+    }
+    .kanban-card {
+      background: white; border: 1px solid var(--line); border-radius: 12px;
+      padding: 12px; cursor: pointer; transition: 0.15s ease;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .kanban-card:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(31,78,121,0.10); transform: translateY(-1px); }
+    .kanban-card .kc-no { font-size: 12px; font-weight: 800; color: var(--primary); }
+    .kanban-card .kc-customer { font-size: 12px; color: var(--text); font-weight: 600; }
+    .kanban-card .kc-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 2px; }
+    .kanban-card .kc-cat { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: var(--primary-soft); color: var(--primary); }
+    .kanban-card .kc-due { font-size: 10px; color: var(--text-muted); }
+    .kanban-card .kc-due.overdue { color: var(--danger); font-weight: 700; }
+    .kanban-empty-col { text-align: center; color: var(--text-muted); font-size: 12px; padding: 24px 8px; }
+    @media(max-width: 1100px) { .kanban-board { grid-template-columns: repeat(5, 200px); } }
+
     /* ── FAQ 탭 ── */
+
     .faq-filter-bar {
       display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; align-items: center;
     }
@@ -930,6 +965,7 @@
        <option value="문의">문의</option><option value="자료 요청">자료 요청</option>
        <option value="가능 여부 확인/검토">가능 여부 확인/검토</option>
        <option value="변경 요청">변경 요청</option><option value="프로그램 요청">프로그램 요청</option>
+       <option value="도면 검도">도면 검도</option><option value="PMS&PLM">PMS&PLM</option>
        <option value="기타">기타 (직접입력)</option>
        </select>
        <input type="text" id="categoryCustom" class="hidden" placeholder="분류 직접 입력">
@@ -1099,6 +1135,7 @@
  <option value="완료">완료</option><option value="진행중">진행중</option>
  <option value="Hold">Hold</option><option value="미진행">미진행</option>
  <option value="담당부서 지정">담당부서 지정</option>
+ <option value="재지정 요청">🔁 재지정 요청 (내 담당 아님)</option>
  </select>
  <div id="multiDeptProgressHint" class="hidden" style="margin-top:6px;padding:8px 12px;border-radius:8px;background:#eaf2fb;border:1px solid #cadcf1;font-size:12px;color:var(--primary);line-height:1.6;">
    ℹ️ 추가 담당부서가 지정되었습니다. 각 부서가 독립적으로 답변을 등록합니다.
@@ -1212,17 +1249,23 @@
  </div>
  </div>
 
- <!-- ════ TAB 3: 응답 조회 (필터 + 리스트) ════ -->
+ <!-- ════ TAB 3: 응답 조회 (필터 + 리스트/칸반) ════ -->
  <div class="tab-content" id="tabInquiry">
  <div class="section">
  <div class="section-header">
  <div><h3 class="section-title">요청 목록 조회</h3><div class="section-desc">전체 요청 목록을 필터링하여 조회합니다.</div></div>
- <div style="display:flex;gap:8px;">
+ <div style="display:flex;gap:8px;align-items:center;">
+ <div style="display:flex;background:var(--surface-soft);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px;">
+ <button type="button" class="btn btn-sm" id="viewToggleList" onclick="toggleInquiryView('list')" style="background:var(--primary);color:white;padding:6px 12px;">📋 리스트</button>
+ <button type="button" class="btn btn-sm" id="viewToggleKanban" onclick="toggleInquiryView('kanban')" style="background:transparent;color:var(--text-muted);padding:6px 12px;">🗂️ 칸반</button>
+ </div>
  <button type="button" class="btn btn-primary btn-sm" onclick="loadInquiryList()">🔄 새로고침</button>
  <button type="button" class="btn btn-soft btn-sm" onclick="downloadExcel()">📥 엑셀 내려받기</button>
  </div>
  </div>
  <div class="section-body">
+ <!-- ── 리스트 뷰 ── -->
+ <div id="inquiryListView">
  <!-- 7. 필터 바 -->
  <div class="filter-bar">
  <div class="field">
@@ -1274,6 +1317,11 @@
  </table>
  </div>
  <div class="pagination" id="inquiryPagination"></div>
+ </div>
+ <!-- ── 칸반 뷰 ── -->
+ <div id="inquiryKanbanView" class="hidden">
+ <div id="kanbanBoard" class="kanban-board"></div>
+ </div>
  </div>
  </div>
 
@@ -1823,8 +1871,18 @@
     function populateDeptSelect(selectId, depts) {
       const select = document.getElementById(selectId);
       if (!select) return;
+      // 케이스 1·2·3 라우팅에 필요한 필수 부서는 항상 옵션에 포함되도록 보장
+      const REQUIRED_DEPTS = ['개발혁신팀', '생산관리팀', '기술연구소'];
+      const merged = [...new Set([...REQUIRED_DEPTS, ...depts])].sort((a,b) => {
+        // 필수 부서는 항상 상단 고정
+        const ai = REQUIRED_DEPTS.indexOf(a), bi = REQUIRED_DEPTS.indexOf(b);
+        if (ai >= 0 && bi >= 0) return ai - bi;
+        if (ai >= 0) return -1;
+        if (bi >= 0) return 1;
+        return a.localeCompare(b, 'ko');
+      });
       select.innerHTML = '<option value="">선택하세요</option>';
-      depts.forEach(d => {
+      merged.forEach(d => {
         const opt = document.createElement('option');
         opt.value = d; opt.textContent = d;
         select.appendChild(opt);
@@ -1849,16 +1907,18 @@
       const emailInput   = document.getElementById('answerHandlerEmail');
       if (!val) { handlerInput.value = ''; emailInput.value = ''; return; }
       handlerInput.value = ''; emailInput.value = '';
-      emailInput.placeholder = '팀장 이메일 조회 중...';
-      fetch(`${GAS_WEB_APP_URL}?action=getTeamLeader&dept=${encodeURIComponent(val)}`)
+      emailInput.placeholder = '기본 담당자 조회 중...';
+      // 담당파트 → 분류 역매핑 후 메일발송설정 시트에서 기본담당자 조회
+      const cat = DEPT_TO_CATEGORY[val] || '기본';
+      fetch(`${GAS_WEB_APP_URL}?action=getDefaultHandler&category=${encodeURIComponent(cat)}`)
         .then(res => res.json())
         .then(json => {
-          if (json && json.success && json.data) {
-            handlerInput.value = json.data.name  || '';
-            emailInput.value   = json.data.email || '';
+          if (json && json.success && json.data && json.data.id) {
+            handlerInput.value = json.data.id;
+            handleHandlerIdInput(json.data.id);
           }
-          emailInput.placeholder = '이름 선택 시 자동완성';
-        }).catch(() => { emailInput.placeholder = '이메일 직접 입력'; });
+          emailInput.placeholder = '아이디 입력 시 자동생성';
+        }).catch(() => { emailInput.placeholder = '아이디 직접 입력'; });
     }
 
     function insertPartTemplate() {
@@ -1880,8 +1940,13 @@
     function handleProgressChange(val) {
       const mark = document.getElementById('reasonRequiredMark');
       const reasonField = document.getElementById('answerReasonField');
-      if (val === '미진행' || val === 'Hold') { mark.style.display = 'inline'; reasonField.style.display = ''; }
-      else { mark.style.display = 'none'; reasonField.style.display = 'none'; }
+      const reasonInput = document.getElementById('answerReason');
+      if (val === '미진행' || val === 'Hold' || val === '재지정 요청') {
+        mark.style.display = 'inline'; reasonField.style.display = '';
+        reasonInput.placeholder = val === '재지정 요청'
+          ? '재지정이 필요한 사유를 입력하세요 (예: 담당 업무 아님, ○○팀 소관)'
+          : '미진행 또는 Hold 사유';
+      } else { mark.style.display = 'none'; reasonField.style.display = 'none'; }
     }
 
     // ══════════════════════════════════════════════════════════
@@ -1929,20 +1994,9 @@
     function onExtraPartChange(idx, val) {
       const handlerInput = document.getElementById(`answerHandler${idx}`);
       const emailInput   = document.getElementById(`answerHandlerEmail${idx}`);
-      // 선택 해제 시 초기화
-      if (!val) { handlerInput.value = ''; emailInput.value = ''; emailInput.placeholder = '이메일'; return; }
-      // 개발혁신팀도 팀장 조회 (변경 시 항상 덮어쓰기)
-      emailInput.placeholder = '팀장 이메일 조회 중...';
+      // 담당파트 선택 시 입력란 초기화 (자유 위임이므로 자동조회 없이 직접 입력)
       handlerInput.value = ''; emailInput.value = '';
-      fetch(`${GAS_WEB_APP_URL}?action=getTeamLeader&dept=${encodeURIComponent(val)}`)
-        .then(res => res.json())
-        .then(json => {
-          if (json && json.success && json.data) {
-            handlerInput.value = json.data.name  || '';
-            emailInput.value   = json.data.email || '';
-          }
-          emailInput.placeholder = '이메일';
-        }).catch(() => { emailInput.placeholder = '이메일 직접 입력'; });
+      emailInput.placeholder = val ? '아이디 입력 시 자동생성' : '이메일';
     }
 
     function collectExtraHandlers() {
@@ -2206,6 +2260,16 @@
       document.getElementById('answerReqNoSelectWrap').classList.remove('hidden');
     }
 
+    // 분류 → 기본 담당파트 매핑 (케이스 1·2·3)
+    function getDefaultPartByCategory(category) {
+      const cat = String(category || '').trim();
+      if (cat === '도면 검도') return '생산관리팀';
+      if (cat === 'PMS&PLM')  return '기술연구소';
+      return '개발혁신팀';
+    }
+    // 담당파트 → 분류 역매핑 (메일발송설정 시트 조회용)
+    const DEPT_TO_CATEGORY = { '생산관리팀': '도면 검도', '기술연구소': 'PMS&PLM', '개발혁신팀': '기본' };
+
     async function loadSelectedRequest(reqNo) {
       if (!reqNo) { document.getElementById('answerQuestionSection').classList.add('hidden'); document.getElementById('answerSearchStatus').innerHTML=''; return; }
       const statusEl = document.getElementById('answerSearchStatus');
@@ -2219,15 +2283,18 @@
         // 답변 작성란 초기화
         document.getElementById('answerHandler').value = '';
         document.getElementById('answerHandlerEmail').value = '';
-        document.getElementById('answerPart').value = '개발혁신팀';
+        // 분류별 기본 담당파트 프리셋 (도면 검도→생산관리팀, PMS&PLM→기술연구소, 그 외→개발혁신팀)
+        const defaultPart = getDefaultPartByCategory(data.category);
+        document.getElementById('answerPart').value = defaultPart;
         document.getElementById('answerProgress').value = '완료';
-        // 개발혁신팀 팀장 정보 자동완성
-        fetch(`${GAS_WEB_APP_URL}?action=getTeamLeader&dept=${encodeURIComponent('개발혁신팀')}`)
+        // 메일발송설정 시트 기준 분류별 기본담당자 자동완성 (팀장 아님, 지정된 담당자)
+        const catForHandler = DEPT_TO_CATEGORY[defaultPart] || '기본';
+        fetch(`${GAS_WEB_APP_URL}?action=getDefaultHandler&category=${encodeURIComponent(catForHandler)}`)
           .then(res => res.json())
           .then(json => {
-            if (json && json.success && json.data) {
-              document.getElementById('answerHandler').value      = json.data.name  || '';
-              document.getElementById('answerHandlerEmail').value = json.data.email || '';
+            if (json && json.success && json.data && json.data.id) {
+              document.getElementById('answerHandler').value = json.data.id;
+              handleHandlerIdInput(json.data.id);
             }
           }).catch(() => {});
         document.getElementById('answerManday').value = '';
@@ -2340,7 +2407,7 @@
 
       if (!handler) { showToast('처리담당자를 입력하세요.'); return; }
       if (!content || content === '<br>') { showToast('답변내용을 입력하세요.'); return; }
-      if ((progress === '미진행' || progress === 'Hold') && !reason) {
+      if ((progress === '미진행' || progress === 'Hold' || progress === '재지정 요청') && !reason) {
         showToast('미진행 또는 Hold 사유를 입력하세요.');
         document.getElementById('answerReason').focus(); return;
       }
@@ -2422,6 +2489,59 @@
     // ══════════════════════════════════════════════════════════
     // TAB 3: 응답 조회 (7. 전체 목록 + 필터)
     // ══════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════════
+    // 🗂️ 칸반보드 (조회 탭 뷰 전환)
+    // ══════════════════════════════════════════════════════════
+    let _inquiryViewMode = 'list';
+
+    function toggleInquiryView(mode) {
+      _inquiryViewMode = mode;
+      document.getElementById('inquiryListView').classList.toggle('hidden', mode !== 'list');
+      document.getElementById('inquiryKanbanView').classList.toggle('hidden', mode !== 'kanban');
+      const listBtn = document.getElementById('viewToggleList');
+      const kanbanBtn = document.getElementById('viewToggleKanban');
+      listBtn.style.background = mode === 'list' ? 'var(--primary)' : 'transparent';
+      listBtn.style.color = mode === 'list' ? 'white' : 'var(--text-muted)';
+      kanbanBtn.style.background = mode === 'kanban' ? 'var(--primary)' : 'transparent';
+      kanbanBtn.style.color = mode === 'kanban' ? 'white' : 'var(--text-muted)';
+      if (mode === 'kanban') renderKanban();
+    }
+
+    function renderKanban() {
+      const board = document.getElementById('kanbanBoard');
+      const data = allInquiryData.length ? allInquiryData : [];
+      if (!data.length) {
+        board.innerHTML = '<div class="dash-empty">데이터가 없습니다.</div>';
+        return;
+      }
+      const cols = { received: [], assigned: [], reassign: [], progress: [], done: [] };
+      data.forEach(d => { cols[getRequestStatus(d)].push(d); });
+
+      const now = new Date();
+      board.innerHTML = Object.entries(cols).map(([key, items]) => {
+        const meta = STATUS_META[key];
+        const sortedItems = [...items].sort((a,b) => String(b.requestNo||'').localeCompare(String(a.requestNo||''),'ko'));
+        const cardsHtml = sortedItems.length
+          ? sortedItems.map(d => {
+              const due = d.dueDate ? new Date(d.dueDate) : null;
+              const overdue = due && !['done'].includes(key) && due < now;
+              return `<div class="kanban-card" onclick="switchTab('inquiry');toggleInquiryView('list');setTimeout(()=>openInquiryDetail('${escapeHtml(d.requestNo||'')}'),150)">
+                <div class="kc-no">${escapeHtml(d.requestNo||'-')}</div>
+                <div class="kc-customer">${escapeHtml(d.customer||'-')} · ${escapeHtml(d.requester||d.requesterName||'-')}</div>
+                <div class="kc-meta">
+                  <span class="kc-cat">${escapeHtml(d.category||'미분류')}</span>
+                  <span class="kc-due ${overdue?'overdue':''}">${overdue?'⚠️ ':''}${escapeHtml(d.dueDate||'-')}</span>
+                </div>
+              </div>`;
+            }).join('')
+          : '<div class="kanban-empty-col">없음</div>';
+        return `<div class="kanban-col">
+          <div class="kanban-col-header"><span>${meta.label}</span><span class="kanban-col-count">${items.length}</span></div>
+          ${cardsHtml}
+        </div>`;
+      }).join('');
+    }
+
     async function loadInquiryList() {
       const statusEl = document.getElementById('inquiryListStatus');
       statusEl.innerHTML = '<span class="loading-spinner"></span> 전체 데이터 불러오는 중...';
@@ -2441,6 +2561,7 @@
 
       statusEl.innerHTML = `<span style="color:var(--success);font-weight:700;">총 ${allInquiryData.length}건</span>`;
       renderInquiryTable(sortRequestsNewestFirst(allInquiryData));
+      if (_inquiryViewMode === 'kanban') renderKanban();
     }
 
     function applyInquiryFilter() {
@@ -2499,9 +2620,9 @@
       const pageData = data.slice(start, start + PAGE_SIZE);
 
       tbody.innerHTML = pageData.map(d => {
-        const hasAnswer = !!(d.answer && d.answer.trim() && d.answer !== '<br>') || (Array.isArray(d.answers) && d.answers.length > 0);
-        const prog = d.progress || (hasAnswer ? '완료' : '답변대기');
-        const statusClass = hasAnswer ? 'background:var(--success-soft);color:var(--success);' : 'background:var(--warning-soft);color:var(--warning);';
+        const statusKey = getRequestStatus(d);
+        const meta = STATUS_META[statusKey];
+        const statusClass = `background:${meta.badgeBg};color:${meta.badgeColor};`;
         const reqNo = escapeHtml(d.requestNo||'');
         return `<tr>
           <td onclick="event.stopPropagation()"><input type="checkbox" class="row-check" value="${reqNo}" onchange="onRowCheckChange()"></td>
@@ -2513,7 +2634,7 @@
           <td onclick="openInquiryDetail('${reqNo}')">${escapeHtml(d.category||'-')}</td>
           <td onclick="openInquiryDetail('${reqNo}')">${escapeHtml(d.requestDate||'-')}</td>
           <td onclick="openInquiryDetail('${reqNo}')">${escapeHtml(d.dueDate||'-')}</td>
-          <td onclick="openInquiryDetail('${reqNo}')"><span class="status-badge" style="${statusClass}">${progressIcon(prog)} ${escapeHtml(prog)}</span></td>
+          <td onclick="openInquiryDetail('${reqNo}')"><span class="status-badge" style="${statusClass}">${meta.label}</span></td>
         </tr>`;
       }).join('');
 
@@ -2558,6 +2679,65 @@
 
     function closeInquiryDetail() {
       document.getElementById('inquiryResultSection').classList.add('hidden');
+    }
+
+    // ── 답변 수정: 답변탭으로 이동 + 기존 값 프리필 ──
+    async function editAnswerFromInquiry(reqNo, part) {
+      switchTab('answer');
+      // PIN 인증 대기 후 실행되도록 약간의 지연 + 재시도
+      const tryFill = async (retry) => {
+        if (retry > 10) return;
+        if (!sessionStorage.getItem('answerAuth')) { setTimeout(() => tryFill(retry+1), 300); return; }
+        document.getElementById('answerRequesterSearch').value = reqNo;
+        await searchRequesterRequests(reqNo);
+        document.getElementById('answerReqNoSelect').value = reqNo;
+        await loadSelectedRequest(reqNo);
+        // 해당 파트 답변 데이터 프리필
+        const target = (currentAnswerData?.answers || []).find(a => (a.part||'') === part);
+        if (target) {
+          document.getElementById('answerPart').value = target.part || '';
+          document.getElementById('answerHandler').value = target.handler || '';
+          document.getElementById('answerHandlerEmail').value = target.handlerEmail || '';
+          document.getElementById('answerProgress').value = target.progress || '완료';
+          handleProgressChange(target.progress || '완료');
+          document.getElementById('answerManday').value = target.manday || '';
+          document.getElementById('answerReason').value = target.reason || '';
+          document.getElementById('answerFilePath').value = target.filePath || '';
+          document.getElementById('answerFileName').value = target.fileName || '';
+          document.getElementById('answerContentEditor').innerHTML = target.answer || '';
+          showToast('기존 답변을 불러왔습니다. 수정 후 다시 제출하면 덮어씁니다.');
+        }
+      };
+      tryFill(0);
+    }
+
+    // ── 답변 삭제 (해당 담당파트 행만) ──
+    async function deleteAnswerByPart(reqNo, part) {
+      const pw = prompt('삭제 비밀번호를 입력하세요:');
+      if (pw === null) return;
+      const pwHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
+      const pwHex = Array.from(new Uint8Array(pwHash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+      if (pwHex !== 'fe2592b42a727e977f055947385b709cc82b16b9a87f88c6abf3900d65d0cdc3') {
+        alert('비밀번호가 올바르지 않습니다.'); return;
+      }
+      if (!confirm(`[${reqNo}] ${part || '기본'} 담당 답변을 삭제하시겠습니까?`)) return;
+      showToast('삭제 중...');
+      try {
+        await fetch(GAS_WEB_APP_URL, {
+          method: 'POST', mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'deleteAnswerByPart', data: { requestNo: reqNo, part: part } })
+        });
+        showToast('답변이 삭제되었습니다.');
+        setTimeout(async () => {
+          allInquiryData = await getAllData();
+          const updated = allInquiryData.find(d => d.requestNo === reqNo);
+          if (updated) renderInquiryResult(updated);
+          else closeInquiryDetail();
+        }, 1200);
+      } catch(e) {
+        showToast('삭제 중 오류가 발생했습니다.');
+      }
     }
 
     function renderInquiryResult(data) {
@@ -2608,6 +2788,8 @@
         '진행중': { bg:'#eaf2fb',             color:'var(--primary)' },
         'Hold':   { bg:'var(--warning-soft)', color:'var(--warning)' },
         '미진행': { bg:'#fde8e8',             color:'var(--danger)'  },
+        '재지정 요청': { bg:'#fdf2f2',        color:'#c0392b'        },
+        '담당부서 지정': { bg:'#eaf2fb',      color:'var(--primary)' },
       };
 
       const replySection = document.createElement('div');
@@ -2626,6 +2808,7 @@
           const answerContent = (a.answer && a.answer.trim() && a.answer !== '<br>')
             ? renderSafeHtml(a.answer)
             : '<span style="color:var(--text-muted);font-style:italic;">답변 내용 없음</span>';
+          const reasonLine = a.reason ? `<div style="margin-top:6px;font-size:12px;color:var(--text-muted);">📌 사유: ${escapeHtml(a.reason)}</div>` : '';
           return `
             <div class="reply-card">
               <div class="reply-card-header">
@@ -2633,8 +2816,13 @@
                 <span class="rc-part">(${escapeHtml(a.part||'-')})</span>
                 ${progBadge}
                 <span class="rc-date">📅 ${escapeHtml(a.replyDate||'-')}</span>
+                <div style="margin-left:auto;display:flex;gap:4px;">
+                  <button type="button" class="btn btn-soft btn-sm" style="padding:3px 8px;font-size:11px;" onclick="editAnswerFromInquiry('${escapeHtml(reqNo)}','${escapeHtml(a.part||'')}')">✏️ 수정</button>
+                  <button type="button" class="btn btn-danger btn-sm" style="padding:3px 8px;font-size:11px;" onclick="deleteAnswerByPart('${escapeHtml(reqNo)}','${escapeHtml(a.part||'')}')">🗑️ 삭제</button>
+                </div>
               </div>
               <div class="reply-card-content">${answerContent}</div>
+              ${reasonLine}
             </div>`;
         }).join('');
 
@@ -2832,9 +3020,35 @@
     }
 
     function hasAnswer(d) {
-      return !!(d.answer && d.answer.trim() && d.answer !== '<br>') ||
-             (Array.isArray(d.answers) && d.answers.length > 0);
+      return getRequestStatus(d) === 'done';
     }
+
+    // ── 요청 상태 판정 (칸반 5단계) ──
+    // received: 접수만 됨 / assigned: 담당부서 지정됨 / reassign: 재지정 요청됨
+    // progress: 진행중·Hold·미진행 / done: 완료
+    function getRequestStatus(d) {
+      const answers = Array.isArray(d.answers) ? d.answers : [];
+      if (!answers.length) {
+        // 구버전 단일 answer 필드 호환
+        if (d.answer && d.answer.trim() && d.answer !== '<br>') {
+          return (d.progress === '완료') ? 'done' : 'progress';
+        }
+        return 'received';
+      }
+      if (answers.some(a => a.progress === '완료')) return 'done';
+      const latest = answers[answers.length - 1];
+      if (latest.progress === '재지정 요청') return 'reassign';
+      if (latest.progress === '담당부서 지정') return 'assigned';
+      return 'progress';
+    }
+
+    const STATUS_META = {
+      received: { label:'📥 접수',       badgeBg:'#eef2f7', badgeColor:'#425466' },
+      assigned: { label:'👤 담당자 배정', badgeBg:'#eaf2fb', badgeColor:'#1f4e79' },
+      reassign: { label:'🔁 재배정',      badgeBg:'#fdf2f2', badgeColor:'#c0392b' },
+      progress: { label:'⏳ 진행중',      badgeBg:'#fef9ec', badgeColor:'#9a6700' },
+      done:     { label:'✅ 완료',        badgeBg:'#eaf7f0', badgeColor:'#1f7a4f' },
+    };
 
 
     // ══════════════════════════════════════════════════════════════
